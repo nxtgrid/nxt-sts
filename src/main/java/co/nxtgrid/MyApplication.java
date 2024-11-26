@@ -1,5 +1,7 @@
 package co.nxtgrid;
 
+import java.util.Map;
+
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.SpringApplication;
@@ -28,7 +30,7 @@ import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearCredi
 public class MyApplication {
     
     @RequestMapping("/")
-    String home(
+    Map<String, Object> home(
         @RequestBody() RequestData body
     ) {
         try {
@@ -65,12 +67,20 @@ public class MyApplication {
                     new Register(randomValueBitString), decoderKey, staEncryptionAlgorithm );
                 generatedToken = tokenGenerator.generate();
             } else {
-                return "Invalid";
+                return null;
             }
                 
             
             // String token = generatedToken.getTokenNo();
-            return generatedToken.getTokenNo();
+            // return Map.of(
+            //     "token", generatedToken.getTokenNo()
+                    
+            public Map<String, Object> getResponseBodyJson() {
+                return Map.of(
+                    "message", "Success",
+                    "status", 200
+                );
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
