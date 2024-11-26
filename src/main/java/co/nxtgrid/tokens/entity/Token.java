@@ -3,41 +3,41 @@ package co.nxtgrid.tokens.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import jakarta.persistence.*;
+// import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity
-@Table(name = "tokens")
+// @Entity
+// @Table(name = "tokens")
 public class Token {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    // @Id
+    // @GeneratedValue(strategy = GenerationType.IDENTITY)
     @JsonIgnore
     private Long id;
 
     private String ref;
 
-    @Column(name = "token_no")
+    // @Column(name = "token_no")
     @JsonProperty("token_no")
     private String tokenNo;
 
-    @Column(name = "user_ref")
+    // @Column(name = "user_ref")
     @JsonProperty("user_ref")
     private String userRef;
 
-    @Column(name = "token_type")
+    // @Column(name = "token_type")
     @JsonProperty("token_type")
     private String tokenType;
 
-    @Column(name = "meter_no")
+    // @Column(name = "meter_no")
     @JsonProperty("meter_no")
     private String meterNo;
 
-    @Column(name = "request_id")
+    // @Column(name = "request_id")
     @JsonProperty("request_id")
     private String requestID;
 
-    @Column(name = "created_at")
+    // @Column(name = "created_at")
     @JsonProperty("created_at")
     private Instant createdAt;
 

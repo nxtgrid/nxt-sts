@@ -2,6 +2,10 @@ package co.nxtgrid;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import co.nxtgrid.token.domain.Amount;
 import co.nxtgrid.token.domain.BaseDate;
@@ -14,8 +18,12 @@ import co.nxtgrid.token.domain.keys.decoder.DecoderKey;
 import co.nxtgrid.token.domain.token.class0.TransferElectricityCreditToken;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class0.TransferElectricityCreditTokenGenerator;
 
-public class Main {
-    public static void main(String[] args) {
+@RestController
+@SpringBootApplication
+public class MyApplication {
+    
+    @RequestMapping("/")
+    String home() {
         try {
             String requestID = "request_id";
 
@@ -45,11 +53,16 @@ public class Main {
                                                                     decoderKey, staEncryptionAlgorithm );
             TransferElectricityCreditToken generatedToken = tokenGenerator.generate();
 
-            String token = generatedToken.getTokenNo();
-            System.out.println(token);
+            return generatedToken.getTokenNo();
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return "Hello World!";
+    }
+    
+    public static void main(String[] args) {
+        SpringApplication.run(MyApplication.class, args);
     }
 
     //-- UTILS
