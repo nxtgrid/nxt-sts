@@ -31,7 +31,7 @@ public class Main {
             RandomNo randomNo = new RandomNo(randomValueBitString);
 
             // initialize the amount
-            double unitsPurchased = 25.6;
+            double unitsPurchased = 25.8;
             Amount amountPurchased = new Amount(unitsPurchased);
 
             // Initialize the encryption algorithm keys
