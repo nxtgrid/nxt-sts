@@ -6,6 +6,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "MyApplication",
+      "request": "launch",
+      "mainClass": "co.nxtgrid.MyApplication",
+      "projectName": "jambu"
+    },
+    {
+      "type": "java",
       "name": "Current File",
       "request": "launch",
       "mainClass": "${file}"
