@@ -1,10 +1,10 @@
 package co.nxtgrid;
 
 import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
 
 public class RequestData {
   private double amount;
+  private long powerLimit;
   private String decoderKey;
   private int randomNumber;
   private DateTime issueDate;
@@ -49,4 +49,12 @@ public class RequestData {
     public void setDecoderKey(String decoderKey) {
         this.decoderKey = decoderKey;
     } 
+
+    public long getPowerLimit() {
+      return powerLimit;
+    }
+
+    public void setPowerLimit(long powerLimit) {
+      this.powerLimit = powerLimit;
+    }
 }

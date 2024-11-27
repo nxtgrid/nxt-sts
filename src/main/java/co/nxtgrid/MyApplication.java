@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import co.nxtgrid.token.domain.Amount;
 import co.nxtgrid.token.domain.BaseDate;
 import co.nxtgrid.token.domain.KeyExpiryNumber;
+import co.nxtgrid.token.domain.MaximumPowerLimit;
+import co.nxtgrid.token.domain.Pad;
 import co.nxtgrid.token.domain.RandomNo;
 import co.nxtgrid.token.domain.Register;
 import co.nxtgrid.token.domain.TokenIdentifier;
@@ -25,6 +27,8 @@ import co.nxtgrid.token.domain.token.Token;
 import co.nxtgrid.token.domain.token.class0.TransferElectricityCreditToken;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class0.TransferElectricityCreditTokenGenerator;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearCreditTokenGenerator;
+import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearTamperConditionTokenGenerator;
+import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.SetMaximumPowerLimitTokenGenerator;
 
 @RestController
 @SpringBootApplication
@@ -63,9 +67,24 @@ public class MyApplication {
                     decoderKey, staEncryptionAlgorithm );
                 generatedToken = tokenGenerator.generate();
 
-            } else if(tokenType.equals("CLEAR_CREDIT")) {
+            } else if (tokenType.equals("CLEAR_CREDIT")) {
+                BitString bitstring = new BitString();
+                bitstring.setValue("0000000000000000");
+                bitstring.setLength(16);
+                Register register = new Register(bitstring);
                 ClearCreditTokenGenerator tokenGenerator = new ClearCreditTokenGenerator(requestID, randomNo, tokenIdentifier,
-                    new Register(randomValueBitString), decoderKey, staEncryptionAlgorithm );
+                    register, decoderKey, staEncryptionAlgorithm );
+                generatedToken = tokenGenerator.generate();
+            } else if (tokenType.equals("CLEAR_TAMPER")) {
+                BitString bitstring = new BitString();
+                bitstring.setValue("0000000000000000");
+                bitstring.setLength(16);
+                Pad pad = new Pad(bitstring); 
+                ClearTamperConditionTokenGenerator tokenGenerator = new ClearTamperConditionTokenGenerator(requestID, randomNo, tokenIdentifier, pad, decoderKey, staEncryptionAlgorithm);
+                generatedToken = tokenGenerator.generate();
+            } else if (tokenType.equals("SET_POWER_LIMIT")) {
+                MaximumPowerLimit powerLimit = new MaximumPowerLimit(body.getPowerLimit());
+                SetMaximumPowerLimitTokenGenerator tokenGenerator = new SetMaximumPowerLimitTokenGenerator(requestID, randomNo, tokenIdentifier, powerLimit, decoderKey, staEncryptionAlgorithm);
                 generatedToken = tokenGenerator.generate();
             } else {
                 return null;
