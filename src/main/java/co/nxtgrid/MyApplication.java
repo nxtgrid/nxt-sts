@@ -1,5 +1,6 @@
 package co.nxtgrid;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.joda.time.DateTime;
@@ -29,7 +30,7 @@ import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearCredi
 @SpringBootApplication
 public class MyApplication {
     
-    @RequestMapping("/")
+    @RequestMapping("/token")
     Map<String, Object> home(
         @RequestBody() RequestData body
     ) {
@@ -74,13 +75,11 @@ public class MyApplication {
             // String token = generatedToken.getTokenNo();
             // return Map.of(
             //     "token", generatedToken.getTokenNo()
-                    
-            public Map<String, Object> getResponseBodyJson() {
-                return Map.of(
-                    "message", "Success",
-                    "status", 200
-                );
-            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("token", generatedToken.getTokenNo());
+                
+            return response;
         } catch (Exception e) {
             e.printStackTrace();
         }
