@@ -47,7 +47,7 @@ public class MyApplication {
             RandomNo randomNo = new RandomNo(randomValueBitString);
 
             // initialize the amount
-            Amount amountPurchased = new Amount(body.getAmount());
+            Amount amountPurchased = new Amount(body.getKwh());
 
             // Initialize the encryption algorithm keys
             byte[] reversedDecoderKey = convertHexStringToReversedByteArray(body.getDecoderKey());
@@ -62,7 +62,7 @@ public class MyApplication {
             
             Token generatedToken;
             String tokenType = body.getType(); 
-            if(tokenType.equals("TOPUP")) {
+            if(tokenType.equals("TOP_UP")) {
                 TransferElectricityCreditTokenGenerator tokenGenerator = new TransferElectricityCreditTokenGenerator(requestID, tokenIdentifier, randomNo, amountPurchased, keyExpiryNumber,
                     decoderKey, staEncryptionAlgorithm );
                 generatedToken = tokenGenerator.generate();

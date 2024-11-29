@@ -3,7 +3,7 @@ package co.nxtgrid;
 import org.joda.time.DateTime;
 
 public class RequestData {
-  private double amount;
+  private double kwh;
   private long powerLimit;
   private String decoderKey;
   private int randomNumber;
@@ -34,12 +34,12 @@ public class RequestData {
       this.randomNumber = randomNumber;
     }
 
-    public double getAmount() {
-      return amount;
+    public double getKwh() {
+      return kwh;
     }
 
-    public void setAmount(double amount) {
-      this.amount = amount;
+    public void setKwh(double kwh) {
+      this.kwh = kwh;
     }
 
     public String getDecoderKey() {
