@@ -1,2 +1,3 @@
-target/*
-!target/jambu-1.0-SNAPSHOT.jar
+target/
+.vscode/
+dependency-reduced-pom.xml

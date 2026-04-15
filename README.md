@@ -1,12 +1,180 @@
 # Jambu
-STS service
 
-Requirements: java, maven
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-In order to generate a new jar file
+Jambu is a lightweight Spring Boot microservice that generates and manages prepayment tokens compliant with the **IEC 62055-41 (STS)** standard. It is used in production to power prepaid utility metering workflows and exposes a simple REST API for token generation.
 
-```mvn clean install```
+> This project is a derivative work of [NectarAPI/tokens-service](https://github.com/NectarAPI/tokens-service), which is licensed under AGPL-3.0. See [NOTICE](NOTICE) for full attribution.
 
-In order to run the jar
+---
 
-```java -jar <path of the .jar file to run>```
+## Supported Token Types
+
+| Type constant | STS Class | Description |
+|---|---|---|
+| `TOP_UP` | Class 0 | Transfer electricity credit |
+| `CLEAR_CREDIT` | Class 2 | Clear existing credit on meter |
+| `CLEAR_TAMPER` | Class 2 | Clear tamper condition |
+| `SET_POWER_LIMIT` | Class 2 | Set maximum power limit |
+
+Tokens are generated using the **Standard Transfer Algorithm (STA / EA07)** via the [Bouncy Castle](https://www.bouncycastle.org/) cryptographic library.
+
+---
+
+## Architecture
+
+```
+HTTP client
+    │
+    ▼
+POST /token  (Spring Boot REST controller — MyApplication)
+    │
+    ├── Parses RequestData (type, issueDate, randomNumber, kwh, decoderKey, powerLimit)
+    │
+    ├── Builds token domain objects (TokenIdentifier, RandomNo, Amount, DecoderKey …)
+    │
+    └── Delegates to the appropriate token generator:
+            TransferElectricityCreditTokenGenerator  (TOP_UP)
+            ClearCreditTokenGenerator                (CLEAR_CREDIT)
+            ClearTamperConditionTokenGenerator       (CLEAR_TAMPER)
+            SetMaximumPowerLimitTokenGenerator       (SET_POWER_LIMIT)
+                │
+                └── STS crypto via BouncyCastle (STA / EA07)
+                        │
+                        └── Returns 20-digit IEC 62055-41 token string
+```
+
+**Key dependencies**
+
+| Library | Purpose |
+|---|---|
+| Spring Boot 3.4 | HTTP server and dependency injection |
+| BouncyCastle 1.70 | STS cryptographic algorithms (STA/EA07) |
+| Joda-Time 2.13 | IEC 62055-41 date/time handling |
+| Apache Thrift 0.18 | Optional Prism HSM integration |
+| Jedis 5.2 | Optional Redis connectivity |
+
+---
+
+## Prerequisites
+
+- Java 17+
+- Maven 3.8+
+
+---
+
+## Building
+
+```bash
+mvn clean install -DskipTests
+```
+
+The build produces `target/jambu-1.0-SNAPSHOT.jar`. The `target/` directory is git-ignored; build artifacts are never committed.
+
+---
+
+## Running
+
+```bash
+java -jar target/jambu-1.0-SNAPSHOT.jar
+```
+
+The service starts on **port 8080** by default (Spring Boot embedded Tomcat). Override with:
+
+```bash
+java -jar target/jambu-1.0-SNAPSHOT.jar --server.port=8084
+```
+
+---
+
+## Docker
+
+```bash
+# 1. Build the JAR first
+mvn clean install -DskipTests
+
+# 2. Build the image
+docker build -t jambu .
+
+# 3. Run the container
+docker run -p 8080:8080 jambu
+```
+
+---
+
+## API Reference
+
+### `POST /token`
+
+Generates a prepayment token.
+
+**Request body (JSON)**
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `type` | `string` | Yes | Token type: `TOP_UP`, `CLEAR_CREDIT`, `CLEAR_TAMPER`, `SET_POWER_LIMIT` |
+| `issueDate` | `string` | Yes | ISO 8601 datetime, e.g. `"2024-03-15T10:30:00"` |
+| `randomNumber` | `integer` | Yes | Random 4-bit value (0–15) used for token uniqueness |
+| `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
+| `kwh` | `number` | For `TOP_UP` | Amount of electricity credit in kWh |
+| `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
+
+**Example — TOP_UP**
+
+```bash
+curl -X POST http://localhost:8080/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "TOP_UP",
+    "issueDate": "2024-03-15T10:30:00",
+    "randomNumber": 3,
+    "decoderKey": "XXXXXXXXXXXXXXXX",
+    "kwh": 50.0
+  }'
+```
+
+**Response**
+
+```json
+{
+  "token": "12345678901234567890"
+}
+```
+
+> **Security note:** The decoder key is a sensitive credential specific to each meter. It must be transmitted only over encrypted channels (HTTPS) and never logged or stored in plaintext.
+
+---
+
+## Configuration
+
+Jambu uses Spring Boot defaults. Configuration can be supplied via:
+
+- `src/main/resources/application.properties` or `application.yml` (not committed; add to suit your deployment)
+- Environment variables (standard Spring Boot relaxed binding)
+- JVM arguments, e.g. `--server.port=8084`
+
+For production deployments on Digital Ocean or Kubernetes, pass all secrets (keys, credentials) as environment variables or secret volumes — never hard-code them in source.
+
+---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+## Authors
+
+See [AUTHORS.md](AUTHORS.md).
+
+---
+
+## License
+
+Copyright (C) 2024–2026 Bobby Bol, Tommaso Girotto.
+
+This program is free software: you can redistribute it and/or modify it under the terms of the **GNU Affero General Public License** as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+See [LICENSE](LICENSE) for the full license text.
+
+This project is a derivative work of [NectarAPI/tokens-service](https://github.com/NectarAPI/tokens-service) (AGPL-3.0). See [NOTICE](NOTICE) for attribution details.
