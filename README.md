@@ -1,3 +1,6 @@
+# Jambu
+STS service
+
 Requirements: java, maven
 
 In order to generate a new jar file
