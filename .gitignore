@@ -1,2 +1,5 @@
 target/*
+# Needed for production build
 !target/jambu-1.0-SNAPSHOT.jar
+.vscode/
+dependency-reduced-pom.xml

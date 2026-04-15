@@ -129,37 +129,4 @@ public class MyApplication {
         return byteArray;
     }
 
-    //-- UTILS
-    // private static DecoderKey createDecoderKey(byte[]) {
-    //     DecoderKey decoderKey = new DecoderKey();
-
-    //     // keys is as specified in the standard
-    //     // byte[] keyBytes = { -119, 103, 69, -13, -34, 18, -68, 10 };
-    //     // byte[] keyBytes = {
-    //     //         (byte) 0x89,
-    //     //         (byte) 0x67,         
-    //     //         (byte) 0x45,
-    //     //         (byte) 0xF3,
-    //     //         (byte) 0xDE,
-    //     //         (byte) 0x12,
-    //     //         (byte) 0xBC, 
-    //     //         (byte) 0x0A
-    //     // };
-
-    //     // meter 47003341816
-    //     // byte[] keyBytes = { 97, -7, -81, 98, -15, 20, -18, -102 };
-    //     byte[] keyBytes = {
-    //             (byte) 0x9A,
-    //             (byte) 0xEE,
-    //             (byte) 0x14,
-    //             (byte) 0xF1,
-    //             (byte) 0x62,
-    //             (byte) 0xAF,
-    //             (byte) 0xF9,                                            
-    //             (byte) 0x61
-    //     };
-        
-    //     decoderKey.setKeyData(keyBytes);
-    //     return decoderKey;
-    // }
 }
