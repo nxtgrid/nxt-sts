@@ -1,6 +1,6 @@
 # Contributors
 
-Thank you to everyone who has contributed to Jambu.
+Thank you to everyone who has contributed to NXT STS.
 
 ## Original Authors
 

@@ -1,8 +1,8 @@
-# Jambu
+# NXT STS
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-Jambu is a lightweight Spring Boot microservice that generates and manages prepayment tokens compliant with the **IEC 62055-41 (STS)** standard. It is used in production to power prepaid utility metering workflows and exposes a simple REST API for token generation.
+NXT STS is a lightweight Spring Boot microservice that generates and manages prepayment tokens compliant with the **IEC 62055-41 (STS)** standard. It is used in production to power prepaid utility metering workflows and exposes a simple REST API for token generation.
 
 > This project is a derivative work of [NectarAPI/tokens-service](https://github.com/NectarAPI/tokens-service), which is licensed under AGPL-3.0. See [NOTICE](NOTICE) for full attribution.
 
@@ -147,7 +147,7 @@ curl -X POST http://localhost:8080/token \
 
 ## Configuration
 
-Jambu uses Spring Boot defaults. Configuration can be supplied via:
+NXT STS uses Spring Boot defaults. Configuration can be supplied via:
 
 - `src/main/resources/application.properties` or `application.yml` (not committed; add to suit your deployment)
 - Environment variables (standard Spring Boot relaxed binding)

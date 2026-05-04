@@ -1,6 +1,6 @@
 # Authors
 
-The following people are the original authors and maintainers of Jambu.
+The following people are the original authors and maintainers of NXT STS.
 
 | Name | Email |
 |---|---|

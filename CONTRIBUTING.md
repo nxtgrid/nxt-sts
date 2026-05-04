@@ -1,4 +1,4 @@
-# Contributing to Jambu
+# Contributing to NXT STS
 
 Thank you for your interest in contributing. This document explains how to participate effectively.
 
