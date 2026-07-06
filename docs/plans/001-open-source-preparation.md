@@ -46,11 +46,17 @@ nxt-sts/
     ├── StsApplication.java        ← @SpringBootApplication bootstrap only
     ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component; deleted in 2.3)
     ├── api/                       ← HTTP layer: controllers, request/response DTOs
-    │   ├── TokenController.java
+    │   ├── TokenController.java   ← injects List<TokenStrategy>, dispatches
     │   ├── TokenRequest.java
-    │   ├── TokenResponse.java
-    │   └── StsUtils.java          ← provisional; see architecture review checkpoint (Task 2.2)
+    │   └── TokenResponse.java
+    ├── strategy/                  ← one TokenStrategy @Component per token type
+    │   ├── TokenStrategy.java
+    │   ├── TransferElectricityCreditStrategy.java
+    │   ├── ClearCreditStrategy.java
+    │   ├── ClearTamperStrategy.java
+    │   └── SetMaximumPowerLimitStrategy.java
     └── token/                     ← sts-core boundary: co.nxtgrid.token.*
+                                   ←   DecoderKey.fromHex(String) added here (Task 2.2)
         ├── domain/
         ├── exceptions/            ← domain exceptions; decode/ subpackage (from tokensdecoder)
         └── generators/
@@ -440,22 +446,31 @@ deferred to Tasks 2.2–2.4.
 ---
 
 ### Task 2.2 — Introduce `TokenStrategy` interface and move dispatch logic
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
 
-**Architecture review checkpoint (before starting):** Use a capable / heavy model to review
-wrapper-layer package layout and decide final homes for types that straddle the core boundary.
-At minimum, resolve:
+**Implementation notes:** Created `co.nxtgrid.strategy` with `TokenStrategy` (`supports(String)` +
+`generate(TokenRequest)`) and four `@Component` implementations
+(`TransferElectricityCreditStrategy`, `ClearCreditStrategy`, `ClearTamperStrategy`,
+`SetMaximumPowerLimitStrategy`), each holding exactly its former `if/else` branch with named
+constants. `TokenController` now injects `List<TokenStrategy>` and dispatches. The hex/reverse
+logic moved to core `DecoderKey.fromHex(String)` and `co.nxtgrid.api.StsUtils` was deleted (see
+resolved checkpoint above). Behavior preserved: unknown type / exception still return null (HTTP
+200 empty body) — 400/500 mapping is Task 2.4. `mvn verify` passes; core Spring-import grep clean.
 
-- Whether `convertHexStringToReversedByteArray()` belongs in `co.nxtgrid.api` (HTTP input
-  parsing), `co.nxtgrid.strategy.*` (shared by strategies), or `co.nxtgrid.token.*` (core
-  `DecoderKey` factory / hex parser — no Spring).
-- Whether future wrapper helpers should use named packages (`api`, `strategy`) rather than a
-  generic `utils` subpackage.
-- Whether `ErrorResponse`, `RootController`, and OpenAPI config follow the same `co.nxtgrid.api`
-  convention.
+**Architecture review checkpoint — RESOLVED (2026-07-06):**
 
-Document the decision in the notes log before implementing strategies.
+- `convertHexStringToReversedByteArray()` → moved to **core** as a plain-Java static factory
+  `DecoderKey.fromHex(String)` (`co.nxtgrid.token.domain.keys.decoder`). The reversed byte order
+  is STS key-loading semantics, not an HTTP concern, and every future `sts-core` caller needs it.
+  `co.nxtgrid.api.StsUtils` is deleted. No Spring imports added to core (boundary preserved).
+- Wrapper helpers use **named packages** (`api`, `strategy`); no generic `utils` package.
+- `ErrorResponse`, `RootController`, and OpenAPI config follow the `co.nxtgrid.api` convention.
+- **Enum timing:** `TokenStrategy.supports(String)` in 2.2; the `TokenType` enum swap stays in
+  Task 2.5 (smallest reviewable slice; 2.2 remains a behavior-preserving refactor).
+- **Behavior in 2.2:** `requestID = "asda"` and the null-on-unknown-type / null-on-exception
+  responses are preserved unchanged. HTTP 400/500 mapping is deferred to Task 2.4; the ADR's
+  UUID `requestID` swap is deferred until test vectors exist (Task 2.6).
 
 **Current state:**
 The four token types are dispatched via `if/else` in `MyApplication.home()`. Each branch
@@ -1108,3 +1123,11 @@ Work items per language:
 (heavy model) on wrapper vs core placement. Open question: `convertHexStringToReversedByteArray`
 is decoder-key byte-order logic, not HTTP-specific — may belong in `co.nxtgrid.token.*` near
 `DecoderKey` rather than `co.nxtgrid.api.StsUtils`. Decide before Task 2.2 adds more call sites.
+
+2026-07-06 — [2.2 checkpoint RESOLVED] — Decisions: (1) hex/reverse logic → core
+`DecoderKey.fromHex(String)`, delete `api/StsUtils`; (2) strategies in `co.nxtgrid.strategy.*`,
+no `utils` package; (3) `ErrorResponse`/`RootController`/OpenAPI → `co.nxtgrid.api`;
+(4) `TokenStrategy.supports(String)` now, enum deferred to 2.5; (5) 2.2 is a behavior-preserving
+refactor — `requestID="asda"` and null-on-unknown/exception kept; 400/500 mapping → 2.4, UUID
+requestID → after 2.6 vectors. Also noted: `co.nxtgrid.hsm.*` (19 files) is still on disk despite
+Task 1.2 being marked complete — track as a separate Phase 1 cleanup, out of scope for 2.2.

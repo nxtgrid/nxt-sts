@@ -15,6 +15,26 @@ public class DecoderKey extends Key {
         super(decoderKeyData);
     }
 
+    /**
+     * Builds a decoder key from its hexadecimal string representation. The STA loads the decoder
+     * key in reversed byte order, so the hex pairs are decoded last-pair-first.
+     */
+    public static DecoderKey fromHex(String hexString) {
+        if (hexString == null || hexString.length() % 2 != 0) {
+            throw new IllegalArgumentException("Invalid hexadecimal string.");
+        }
+
+        int length = hexString.length();
+        byte[] keyData = new byte[length / 2];
+        for (int i = 0; i < keyData.length; i++) {
+            int startIndex = length - 2 * (i + 1);
+            String hexPair = hexString.substring(startIndex, startIndex + 2);
+            keyData[i] = (byte) Integer.parseInt(hexPair, 16);
+        }
+
+        return new DecoderKey(keyData);
+    }
+
     public String getName() {
         return NAME;
     }
