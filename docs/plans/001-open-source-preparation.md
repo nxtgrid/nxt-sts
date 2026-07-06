@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Tasks 1.1–1.2 complete)
+**Status:** In progress (Phase 1 — Tasks 1.1–1.3 complete)
 
 ---
 
@@ -236,7 +236,13 @@ already done; 1.3 now only covers `tokensdecoder/`.
 ---
 
 ### Task 1.3 — Delete the `prism` generator tree and `tokensdecoder` packages
-- [ ] **Status:** Not started (prism tree already removed in Task 1.2 — `tokensdecoder/` remains)
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** Fourteen STS decode error types (`CRCError`, `DDTKError`, etc.) were relocated to
+`co.nxtgrid.token.exceptions.decode` — they are referenced by `decode()` methods on domain
+`Token` subclasses and `Token.checkCrc()`, not by the deleted decoder orchestration layer.
+Unused `Decoder` import removed from `StandardTransferAlgorithmEncryptionAlgorithm`. Prism tree
+was already removed in Task 1.2.
 - **Depends on:** 1.1, 1.2
 
 **Current state:**

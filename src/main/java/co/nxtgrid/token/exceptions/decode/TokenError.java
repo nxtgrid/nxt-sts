@@ -1,4 +1,4 @@
-package co.nxtgrid.token.generators.tokensdecoder.error;
+package co.nxtgrid.token.exceptions.decode;
 
 public class TokenError extends Error {
 

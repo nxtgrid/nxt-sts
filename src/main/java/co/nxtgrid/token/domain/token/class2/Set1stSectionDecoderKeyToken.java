@@ -5,7 +5,7 @@ import co.nxtgrid.token.domain.base.BitString;
 import co.nxtgrid.token.domain.tokenclass.class2.Set1stSectionDecoderKeyTokenClass;
 import co.nxtgrid.token.domain.tokensubclass.class2.Set1stSectionDecoderKeyTokenSubClass;
 import co.nxtgrid.token.exceptions.*;
-import co.nxtgrid.token.generators.tokensdecoder.error.CRCError;
+import co.nxtgrid.token.exceptions.decode.CRCError;
 
 import java.util.HashMap;
 

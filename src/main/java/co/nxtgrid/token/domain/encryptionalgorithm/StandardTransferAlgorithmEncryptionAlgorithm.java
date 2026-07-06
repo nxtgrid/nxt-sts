@@ -12,7 +12,6 @@ import co.nxtgrid.token.domain.table.substitutiontable.DecryptingSecondSubstitut
 import co.nxtgrid.token.domain.table.substitutiontable.EncryptingFirstSubstitutionTable;
 import co.nxtgrid.token.domain.table.substitutiontable.EncryptingSecondSubstitutionTable;
 import co.nxtgrid.token.exceptions.*;
-import co.nxtgrid.token.generators.tokensdecoder.Decoder;
 import co.nxtgrid.token.miscellaneous.Strings;
 
 public class StandardTransferAlgorithmEncryptionAlgorithm extends EncryptionAlgorithm {

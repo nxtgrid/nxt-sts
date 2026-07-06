@@ -9,7 +9,7 @@ import co.nxtgrid.token.exceptions.BitConcatOverflowError;
 import co.nxtgrid.token.exceptions.InvalidNewKeyMiddleOrder1Exception;
 import co.nxtgrid.token.exceptions.InvalidRangeException;
 import co.nxtgrid.token.exceptions.InvalidSgchoException;
-import co.nxtgrid.token.generators.tokensdecoder.error.CRCError;
+import co.nxtgrid.token.exceptions.decode.CRCError;
 
 import java.util.HashMap;
 
