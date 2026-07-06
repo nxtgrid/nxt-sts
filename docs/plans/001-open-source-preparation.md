@@ -962,7 +962,7 @@ Verified: `./mvnw verify` and `./mvnw clean package -DskipTests` both pass.
 ---
 
 ### Task 3.3 — Add Spring Boot Actuator and committed config
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** nothing
 
 **Current state:**
@@ -995,6 +995,11 @@ springdoc.api-docs.path=/v3/api-docs
 pages. Verified in Task 2.4 / Phase 2 checkpoint.
 
 **Done when:** `GET /actuator/health` returns `{"status":"UP"}`.
+
+**Notes:** Extended existing `application.properties` (Phase 2 already had
+`springdoc.swagger-ui.path=/swagger`); kept `/swagger` rather than plan sample `/swagger-ui.html`.
+Added `spring-boot-starter-actuator` (no explicit version — inherits from Boot parent). `./mvnw verify`
+passes; test context logs expose health + info under `/actuator`.
 
 ---
 
