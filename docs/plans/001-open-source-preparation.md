@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Tasks 1.1–1.4 complete)
+**Status:** In progress (Phase 1 — Tasks 1.1–1.5 complete)
 
 ---
 
@@ -289,7 +289,12 @@ Build succeeds.
 ---
 
 ### Task 1.5 — Remove orphaned Maven dependencies
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+Removed from `pom.xml`: Gson 2.11, Thrift 0.18.1, Jedis 5.2, `org.json` 20240303,
+`jakarta.xml.bind-api` 4.0.2. `mvn clean install -DskipTests` succeeds.
+`mvn dependency:analyze` flags only expected Spring Boot starter noise and
+`junit-jupiter-api` (no test sources yet); none of the five removed artifacts remain.
 - **Depends on:** 1.1, 1.2, 1.3, 1.4
 
 **Current state:**
