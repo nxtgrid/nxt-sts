@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** Phase 1 complete (Tasks 1.1–1.7); Phase 2 not started
+**Status:** Phase 1 complete (Tasks 1.1–1.7); Phase 2 complete (Tasks 2.1–2.8); Phase 3 in progress
 
 ---
 
@@ -938,7 +938,7 @@ target/
 ---
 
 ### Task 3.2 — Add Maven wrapper
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** nothing
 
 **Target state:**
@@ -954,6 +954,10 @@ Commit `mvnw`, `mvnw.cmd`, and `.mvn/`.
 
 **Done when:** `./mvnw clean package -DskipTests` succeeds on a machine with no local Maven
 installation (only the JDK).
+
+**Notes:** Generated via `mvn wrapper:wrapper -Dmaven=3.9.9`. Maven pinned to 3.9.9 in
+`.mvn/wrapper/maven-wrapper.properties` (wrapper plugin 3.3.4, `distributionType=only-script`).
+Verified: `./mvnw verify` and `./mvnw clean package -DskipTests` both pass.
 
 ---
 
