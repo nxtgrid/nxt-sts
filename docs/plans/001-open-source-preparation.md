@@ -884,7 +884,7 @@ Docker. A CI pipeline guards `main`. Tagged releases produce container images au
 ---
 
 ### Task 3.1 — Rewrite `Dockerfile` as multi-stage
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** 1.6 (correct artifact name)
 
 **Current state:**
@@ -934,6 +934,11 @@ target/
 
 **Done when:** `docker build -t nxt-sts .` succeeds from a clean clone (no `target/` present).
 `docker run -p 8080:8080 nxt-sts` starts the service. The health endpoint responds.
+
+**Notes:** Replaced single-stage host-JAR copy with plan multi-stage build. Added `.dockerignore`.
+`./mvnw verify` passes. Verified 2026-07-06: `docker build -t nxt-sts .` succeeds (no host
+`target/` required); container returns `{"status":"UP"}` from `/actuator/health`; root index
+responds. Used `-p 8081:8080` locally because dev server occupied 8080.
 
 ---
 
