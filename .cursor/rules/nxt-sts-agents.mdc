@@ -14,6 +14,17 @@ alwaysApply: true
 3. **Never** proceed to the next item until the human explicitly prompts you.
 4. Keep changes in small, reviewable chunks. Human reviews and commits — do not commit/push unless asked.
 
+### Todos — one per turn (non-negotiable)
+
+- One todo per turn: `in_progress` → work → `completed` → **end turn**.
+- Do **not** start, advance, or complete a second todo in the same turn.
+- After each todo, summarize changes and ask the human to review; wait for an explicit go-ahead.
+
+### Questions — main chat only
+
+- Ask questions as normal chat messages. **Never** use the AskQuestion tool or structured
+  question-picker UI.
+
 ## Before coding
 
 Read `AGENTS.md`, then the relevant task in `docs/plans/001-open-source-preparation.md` and `docs/architecture/001-open-source-preparation.md`. Source files are ground truth.

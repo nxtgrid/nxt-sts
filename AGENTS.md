@@ -19,6 +19,28 @@ clean, readable code and established design patterns.
    engineering-plan task or one logical feature slice. Avoid large undiffable changes.
 6. **Human owns git.** Do not commit, push, or open PRs unless the human explicitly asks.
 
+### Todos — hard stop after each item
+
+When you create a todo list and execute it:
+
+- Work on **exactly one** todo per turn. Mark it `in_progress`, do the work, mark it
+  `completed`, then **end your turn**.
+- **Never** start the next todo in the same turn — not even marking it `in_progress`.
+- **Never** batch multiple todos into one turn, even if they seem small or related.
+- After finishing a todo, summarize what changed and explicitly ask the human to review before
+  continuing. Do not continue until they reply (e.g. "proceed", "continue", "next").
+
+Violating this (completing 2+ todos in one turn) is always wrong, regardless of how simple the
+remaining items look.
+
+---
+
+## Communication
+
+- **Ask questions in the main chat.** Write questions as normal messages in your response.
+- **Never use the AskQuestion tool** (or any structured question-picker / multiple-choice UI).
+  If you need a decision, ask in plain text and wait for the human's reply.
+
 ---
 
 ## Sources of truth (read before coding)
