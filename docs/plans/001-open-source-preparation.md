@@ -736,7 +736,7 @@ Create `src/test/java/co/nxtgrid/` and add at minimum:
 Example vector structure:
 ```java
 // Vector sourced from current production service output, 2026-07-02
-// decoderKey: 1234567890ABCDEF | issueDate: 2024-03-15T10:30:00 | rnd: 3 | kwh: 50.0
+// decoderKey: 1234567890ABCDEF | issueDate: 2024-03-15T10:30:00 | rnd: 3 | kwh: 0.5
 assertThat(token).isEqualTo("12345678901234567890");
 ```
 
@@ -751,8 +751,14 @@ five validation rejection tests are green. `RootControllerTest` passes.
 ---
 
 ### Task 2.7 — Add OpenAPI / Swagger UI documentation
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.3, 2.4
+
+**Implementation notes:** Added `springdoc-openapi-starter-webmvc-ui` 2.8.5, `OpenApiConfig`,
+`@Schema` on `TokenRequest`/`TokenResponse`/`ErrorResponse` (including STS RND docs on
+`randomNumber`), `@Operation`/`@ApiResponses` on `TokenController`. Swagger UI served at
+`/swagger` (`springdoc.swagger-ui.path`). `OpenApiDocumentationTest` asserts `/v3/api-docs`
+and `/swagger`. `mvn verify` green (17 tests).
 
 **Current state:**
 No OpenAPI dependency or annotations. Integrators must read `README.md` or Java source to
@@ -862,7 +868,7 @@ approach and document it in the README.
 - `mvn verify` (build + test) passes from a clean checkout.
 - `curl http://localhost:8080/` returns JSON service index (not whitelabel HTML).
 - `curl http://localhost:8080/swagger-ui.html` loads Swagger UI.
-- `curl -X POST http://localhost:8080/token -H "Content-Type: application/json" -d '{"type":"TOP_UP","issueDate":"2024-03-15T10:30:00","randomNumber":3,"decoderKey":"1234567890ABCDEF","kwh":50.0}'` returns HTTP 200 with a 20-digit token.
+- `curl -X POST http://localhost:8080/token -H "Content-Type: application/json" -d '{"type":"TOP_UP","issueDate":"2024-03-15T10:30:00","randomNumber":3,"decoderKey":"1234567890ABCDEF","kwh":0.5}'` returns HTTP 200 with a 20-digit token.
 - Every known error path returns a structured JSON error with the correct HTTP status code.
 - No null or empty response body is possible from any code path.
 

@@ -27,7 +27,7 @@ class RootControllerTest {
             .andExpect(jsonPath("$.endpoints.token").value("POST /token"))
             .andExpect(jsonPath("$.endpoints.health").value("GET /actuator/health"))
             .andExpect(jsonPath("$.endpoints.openapi").value("GET /v3/api-docs"))
-            .andExpect(jsonPath("$.endpoints.swaggerUi").value("GET /swagger-ui.html"));
+            .andExpect(jsonPath("$.endpoints.swaggerUi").value("GET /swagger"));
     }
 
     @Test

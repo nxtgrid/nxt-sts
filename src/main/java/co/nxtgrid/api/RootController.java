@@ -18,7 +18,7 @@ public class RootController {
                 "token", "POST /token",
                 "health", "GET /actuator/health",
                 "openapi", "GET /v3/api-docs",
-                "swaggerUi", "GET /swagger-ui.html"
+                "swaggerUi", "GET /swagger"
             )
         );
     }

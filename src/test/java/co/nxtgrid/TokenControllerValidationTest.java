@@ -21,7 +21,7 @@ class TokenControllerValidationTest {
           "issueDate": "2024-03-15T10:30:00",
           "randomNumber": 3,
           "decoderKey": "0123456789ABCDEF",
-          "kwh": 50.0
+          "kwh": 0.5
         }
         """;
 
@@ -40,7 +40,7 @@ class TokenControllerValidationTest {
                       "issueDate": "2024-03-15T10:30:00",
                       "randomNumber": 3,
                       "decoderKey": "0123456789ABCDE",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )
@@ -62,7 +62,7 @@ class TokenControllerValidationTest {
                       "issueDate": "2024-03-15T10:30:00",
                       "randomNumber": 3,
                       "decoderKey": "0123456789ABCDEF",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )
@@ -86,7 +86,7 @@ class TokenControllerValidationTest {
                       "issueDate": "2024-03-15T10:30:00",
                       "randomNumber": 16,
                       "decoderKey": "0123456789ABCDEF",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )
@@ -108,7 +108,7 @@ class TokenControllerValidationTest {
                       "issueDate": "2024-03-15T10:30:00",
                       "randomNumber": 125489697135,
                       "decoderKey": "0123456789ABCDEF",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )
@@ -128,7 +128,7 @@ class TokenControllerValidationTest {
                       "type": "TOP_UP",
                       "issueDate": "2024-03-15T10:30:00",
                       "decoderKey": "0123456789ABCDEF",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )
@@ -170,7 +170,7 @@ class TokenControllerValidationTest {
                       "issueDate": "not-a-date",
                       "randomNumber": 3,
                       "decoderKey": "0123456789ABCDEF",
-                      "kwh": 50.0
+                      "kwh": 0.5
                     }
                     """
                 )

@@ -176,7 +176,7 @@ curl -X POST http://localhost:8080/token \
     "issueDate": "2024-03-15T10:30:00",
     "randomNumber": 3,
     "decoderKey": "XXXXXXXXXXXXXXXX",
-    "kwh": 50.0
+    "kwh": 0.5
   }'
 ```
 

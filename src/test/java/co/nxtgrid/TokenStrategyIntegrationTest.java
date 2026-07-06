@@ -30,12 +30,12 @@ class TokenStrategyIntegrationTest {
               "issueDate": "%s",
               "randomNumber": 3,
               "decoderKey": "%s",
-              "kwh": 50.0
+              "kwh": 0.5
             }
             """.formatted(ISSUE_DATE, DECODER_KEY)
         )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("41721561956736894278"));
+            .andExpect(jsonPath("$.token").value("58627975513348563046"));
     }
 
     @Test
