@@ -43,9 +43,13 @@ nxt-sts/
 ├── Dockerfile                     ← Single-stage; copies pre-built JAR (rewritten in Phase 3)
 ├── docs/capabilities.md           ← Token type matrix (API vs library)
 └── src/main/java/co/nxtgrid/
-    ├── StsApplication.java        ← @SpringBootApplication + @RestController combined
-    ├── RequestData.java           ← Request DTO (no validation annotations yet)
-    ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component)
+    ├── StsApplication.java        ← @SpringBootApplication bootstrap only
+    ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component; deleted in 2.3)
+    ├── api/                       ← HTTP layer: controllers, request/response DTOs
+    │   ├── TokenController.java
+    │   ├── TokenRequest.java
+    │   ├── TokenResponse.java
+    │   └── StsUtils.java          ← provisional; see architecture review checkpoint (Task 2.2)
     └── token/                     ← sts-core boundary: co.nxtgrid.token.*
         ├── domain/
         ├── exceptions/            ← domain exceptions; decode/ subpackage (from tokensdecoder)
@@ -125,7 +129,7 @@ from the start of this effort.
 | Layer | Packages | Allowed dependencies |
 |---|---|---|
 | **Core** (future `sts-core`) | `co.nxtgrid.token.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
-| **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controllers, DTOs, strategies, OpenAPI config) | Spring Boot freely; depends on core packages |
+| **Wrapper** (future `sts-service`) | `co.nxtgrid.api.*`, `co.nxtgrid.strategy.*`, `StsApplication` | Spring Boot freely; depends on core packages |
 
 ### Concrete rules every task must follow
 
@@ -380,7 +384,7 @@ self-describing via OpenAPI/Swagger UI and a JSON root route.
 ---
 
 ### Task 2.1 — Extract `StsApplication` bootstrap and create `TokenController`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 1.6 (rename must be complete first)
 
 **Current state:**
@@ -424,11 +428,34 @@ utility method in a new `StsUtils.java` file (or inline it where used).
 **Done when:** `POST /token` behaves identically to before. `StsApplication` has no
 `@RestController` annotation.
 
+**Implementation notes:** Introduced wrapper-layer `co.nxtgrid.api.TokenController`,
+`TokenRequest`, `TokenResponse`, and package-private `StsUtils`. Request semantics are
+intentionally unchanged in this task; Bean Validation, enum dispatch, and error mapping remain
+deferred to Tasks 2.2–2.4.
+
+**Deviation (post-review):** HTTP-facing types moved from `co.nxtgrid` top-level into
+`co.nxtgrid.api.*` for clearer wrapper-layer organisation. `StsUtils` placement is provisional
+— see architecture review checkpoint below.
+
 ---
 
 ### Task 2.2 — Introduce `TokenStrategy` interface and move dispatch logic
 - [ ] **Status:** Not started
 - **Depends on:** 2.1
+
+**Architecture review checkpoint (before starting):** Use a capable / heavy model to review
+wrapper-layer package layout and decide final homes for types that straddle the core boundary.
+At minimum, resolve:
+
+- Whether `convertHexStringToReversedByteArray()` belongs in `co.nxtgrid.api` (HTTP input
+  parsing), `co.nxtgrid.strategy.*` (shared by strategies), or `co.nxtgrid.token.*` (core
+  `DecoderKey` factory / hex parser — no Spring).
+- Whether future wrapper helpers should use named packages (`api`, `strategy`) rather than a
+  generic `utils` subpackage.
+- Whether `ErrorResponse`, `RootController`, and OpenAPI config follow the same `co.nxtgrid.api`
+  convention.
+
+Document the decision in the notes log before implementing strategies.
 
 **Current state:**
 The four token types are dispatched via `if/else` in `MyApplication.home()`. Each branch
@@ -1074,4 +1101,10 @@ Work items per language:
 
 > Append here as the plan is executed. Format: `YYYY-MM-DD — [task id] — note`
 
-_(empty)_
+2026-07-06 — [2.1] — HTTP wrapper types (`TokenController`, `TokenRequest`, `TokenResponse`,
+`StsUtils`) live in `co.nxtgrid.api.*`; bootstrap stays at `co.nxtgrid.StsApplication`.
+
+2026-07-06 — [2.2 checkpoint] — Before implementing strategies, run an architecture review
+(heavy model) on wrapper vs core placement. Open question: `convertHexStringToReversedByteArray`
+is decoder-key byte-order logic, not HTTP-specific — may belong in `co.nxtgrid.token.*` near
+`DecoderKey` rather than `co.nxtgrid.api.StsUtils`. Decide before Task 2.2 adds more call sites.

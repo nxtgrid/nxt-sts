@@ -1,45 +1,45 @@
-package co.nxtgrid;
+package co.nxtgrid.api;
 
 import org.joda.time.DateTime;
 
-public class RequestData {
-  private double kwh;
-  private long powerLimit;
-  private String decoderKey;
-  private int randomNumber;
-  private DateTime issueDate;
-  private String type;
+public class TokenRequest {
+    private double kwh;
+    private long powerLimit;
+    private String decoderKey;
+    private int randomNumber;
+    private DateTime issueDate;
+    private String type;
 
     public String getType() {
-      return this.type;
+        return this.type;
     }
 
     public void setType(String type) {
-      this.type = type;
+        this.type = type;
     }
-    
+
     public DateTime getIssueDate() {
-      return issueDate;
+        return issueDate;
     }
 
     public void setIssueDate(String issueDate) {
-      this.issueDate = DateTime.parse(issueDate);
+        this.issueDate = DateTime.parse(issueDate);
     }
 
     public int getRandomNumber() {
-      return randomNumber;
+        return randomNumber;
     }
 
     public void setRandomNumber(int randomNumber) {
-      this.randomNumber = randomNumber;
+        this.randomNumber = randomNumber;
     }
 
     public double getKwh() {
-      return kwh;
+        return kwh;
     }
 
     public void setKwh(double kwh) {
-      this.kwh = kwh;
+        this.kwh = kwh;
     }
 
     public String getDecoderKey() {
@@ -48,13 +48,13 @@ public class RequestData {
 
     public void setDecoderKey(String decoderKey) {
         this.decoderKey = decoderKey;
-    } 
+    }
 
     public long getPowerLimit() {
-      return powerLimit;
+        return powerLimit;
     }
 
     public void setPowerLimit(long powerLimit) {
-      this.powerLimit = powerLimit;
+        this.powerLimit = powerLimit;
     }
 }
