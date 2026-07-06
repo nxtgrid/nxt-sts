@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Task 1.1 complete)
+**Status:** In progress (Phase 1 — Tasks 1.1–1.2 complete)
 
 ---
 
@@ -214,7 +214,13 @@ Files under this path include:
 ---
 
 ### Task 1.2 — Delete `co.nxtgrid.hsm` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** The `tokensgenerator/prism/` tree was deleted in the same pass — every prism
+generator imports `hsm.prism` and the project cannot compile with one removed and the other
+remaining. `Meter.decodePrism()` and its HSM connection fields were removed from
+`tokensdecoder/Meter.java` (native decode path retained). Task 1.3 prism portion is therefore
+already done; 1.3 now only covers `tokensdecoder/`.
 - **Depends on:** 1.1 (decoder manager in `tokens/` references `hsm/`)
 
 **Current state:**
@@ -230,7 +236,7 @@ Files under this path include:
 ---
 
 ### Task 1.3 — Delete the `prism` generator tree and `tokensdecoder` packages
-- [ ] **Status:** Not started
+- [ ] **Status:** Not started (prism tree already removed in Task 1.2 — `tokensdecoder/` remains)
 - **Depends on:** 1.1, 1.2
 
 **Current state:**

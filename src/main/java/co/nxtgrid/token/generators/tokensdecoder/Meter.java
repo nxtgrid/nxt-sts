@@ -1,32 +1,33 @@
 package co.nxtgrid.token.generators.tokensdecoder;
 
-import co.nxtgrid.hsm.prism.impl.PrismClientFacade;
-import co.nxtgrid.hsm.prism.impl.PrismHSMConnector;
-import co.nxtgrid.hsm.prism.impl.exceptions.InvalidTokenIdentifierException;
-import co.nxtgrid.token.domain.*;
 import co.nxtgrid.token.domain.base.BitString;
-import co.nxtgrid.token.domain.base.Nibble;
 import co.nxtgrid.token.domain.encryptionalgorithm.EncryptionAlgorithm;
 import co.nxtgrid.token.domain.keys.decoder.DecoderKey;
-import co.nxtgrid.token.domain.rate.InvalidRateException;
-import co.nxtgrid.token.domain.supplygroupcode.SupplyGroupCode;
 import co.nxtgrid.token.domain.token.Token;
-import co.nxtgrid.token.exceptions.*;
+import co.nxtgrid.token.exceptions.InvalidBitException;
+import co.nxtgrid.token.exceptions.InvalidRangeException;
+import co.nxtgrid.token.exceptions.InvalidTokenClassException;
+import co.nxtgrid.token.exceptions.InvalidTokenException;
+import co.nxtgrid.token.exceptions.InvalidTokenSubclassException;
 import co.nxtgrid.token.generators.tokensdecoder.class0.TransferElectricityCreditDecoder;
 import co.nxtgrid.token.generators.tokensdecoder.class0.TransferGasCreditDecoder;
 import co.nxtgrid.token.generators.tokensdecoder.class0.TransferWaterCreditDecoder;
 import co.nxtgrid.token.generators.tokensdecoder.class1.InitiateMeterTestOrDisplay1TokenDecoder;
 import co.nxtgrid.token.generators.tokensdecoder.class1.InitiateMeterTestOrDisplay2TokenDecoder;
-import co.nxtgrid.token.generators.tokensdecoder.class2.*;
+import co.nxtgrid.token.generators.tokensdecoder.class2.ClearCreditTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.ClearTamperConditionTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.Set1stSectionDecoderKeyTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.Set2ndSectionDecoderKeyTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.Set3rdSectionDecoderKeyTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.Set4thSectionDecoderKeyTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.SetMaximumPhasePowerUnbalanceLimitTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.SetMaximumPowerLimitTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.SetTariffRateTokenDecoder;
+import co.nxtgrid.token.generators.tokensdecoder.class2.SetWaterMeterFactorTokenDecoder;
 import co.nxtgrid.token.generators.utils.Utils;
 import co.nxtgrid.token.miscellaneous.Strings;
-import co.nxtgrid.token.exceptions.InvalidTokenNoException;
-import org.apache.thrift.TException;
 
-import java.io.IOException;
 import java.math.BigInteger;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 
 public class Meter {
 
@@ -36,21 +37,6 @@ public class Meter {
     private String tokenClassBits;
     private EncryptionAlgorithm encryptionAlgorithm;
 
-    private String host;
-    private int port;
-    private String realm;
-    private String username;
-    private String password;
-
-    public Meter(String host, int port,
-                 String realm, String username, String password) {
-        setHost(host);
-        setPort(port);
-        setRealm(realm);
-        setUsername(username);
-        setPassword(password);
-    }
-
     public Meter(String _20DigitToken, DecoderKey decoderKey,
                  EncryptionAlgorithm encryptionAlgorithm)
             throws InvalidTokenException, InvalidBitException {
@@ -58,12 +44,6 @@ public class Meter {
         set64BitTokenString(_20DigitToken);
         setDecoderKey(decoderKey);
         setEncryptionAlgorithm(encryptionAlgorithm);
-    }
-
-    protected BitString substituteDataBits (BitString dataBlock, int nibblePosition, Nibble substitutionValue)
-            throws InvalidRangeException, NibbleOutOfRangeException {
-        dataBlock.setNibble(nibblePosition, substitutionValue) ;
-        return dataBlock ;
     }
 
     public String getTokenString() {
@@ -138,28 +118,6 @@ public class Meter {
         throw new InvalidTokenException(String.format("Unsupported token %s", _20DigitToken));
     }
 
-    public Token decodePrism(String requestID,
-                             IndividualAccountIdentificationNumber individualAccountIdentificationNumber,
-                             EncryptionAlgorithm encryptionAlgorithm, TokenCarrierType tokenCarrierType,
-                             SupplyGroupCode supplyGroupCode, KeyRevisionNumber keyRevisionNumber,
-                             KeyExpiryNumber keyExpiryNumber, TariffIndex tariffIndex,
-                             String token)
-            throws TException, IOException, KeyManagementException,
-                    NoSuchAlgorithmException, InvalidTokenNoException,
-                    InvalidRangeException, InvalidTokenSubclassException,
-                    InvalidTokenClassException, InvalidTokenIdentifierException,
-                    InvalidBitStringException, InvalidUnitsPurchasedException,
-                    InvalidManufacturerCodeException, InvalidControlBitStringException,
-                    InvalidMPLException, InvalidRegisterBitString, InvalidRateException,
-            InvalidMppulException {
-        PrismHSMConnector connector = new PrismHSMConnector();
-        PrismClientFacade facade = new PrismClientFacade(getHost(), getPort(), getRealm(),
-                                                        getUsername(), getPassword(), connector);
-        return facade.verifyToken(requestID, individualAccountIdentificationNumber, encryptionAlgorithm,
-                                    tokenCarrierType, supplyGroupCode, keyRevisionNumber,
-                                    keyExpiryNumber, tariffIndex, token);
-    }
-
     private TokenDecoder setTokenDecoder(int tokenClass, int tokenSubclass)
             throws InvalidTokenClassException, InvalidTokenSubclassException {
         if (tokenClass >= 0 && tokenClass <= 2) {
@@ -219,45 +177,5 @@ public class Meter {
         } else {
             throw new InvalidTokenClassException(Strings.INVALID_TOKEN_CLASS);
         }
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public void setHost(String host) {
-        this.host = host;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
-    public String getRealm() {
-        return realm;
-    }
-
-    public void setRealm(String realm) {
-        this.realm = realm;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

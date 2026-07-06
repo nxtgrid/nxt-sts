@@ -61,9 +61,9 @@ The repository also contains code that is **not** part of the software STA path 
 
 | Path | Status |
 |---|---|
-| `token/generators/tokensgenerator/prism/` | Parallel generators that route through a Prism HSM. Not called from the live service; scheduled for removal (open-source plan Task 1.3). |
-| `hsm/prism/` | Thrift client for Prism HSM. Not wired into Spring; scheduled for removal (Task 1.2). |
-| `co.nxtgrid.tokens.*` | Original NectarAPI service orchestration layer. Removed (Task 1.1). |
+| `token/generators/tokensgenerator/prism/` | Removed (Task 1.2). |
+| `hsm/prism/` | Removed (Task 1.2). |
+| `co.nxtgrid.tokens.*` | Removed (Task 1.1). |
 
 ---
 
