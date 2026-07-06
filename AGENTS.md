@@ -45,17 +45,16 @@ When executing the open-source preparation plan:
 
 | Layer | Packages | Allowed dependencies |
 |---|---|---|
-| Core (future `sts-core`) | `co.nxtgrid.token.*`, `co.nxtgrid.ca.*` | Java, BouncyCastle, Joda-Time only — **no Spring** |
+| Core (future `sts-core`) | `co.nxtgrid.token.*` | Java, BouncyCastle, Joda-Time only — **no Spring** |
 | Wrapper (future `sts-service`) | `co.nxtgrid.*` top-level | Spring Boot, springdoc, validation, etc. |
 
 Verify after touching core packages:
 
 ```bash
 grep -r "import org.springframework" src/main/java/co/nxtgrid/token/
-grep -r "import org.springframework" src/main/java/co/nxtgrid/ca/
 ```
 
-Both must return no results.
+Must return no results.
 
 ### Behavior preservation
 

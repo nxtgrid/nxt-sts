@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Tasks 1.1–1.6 complete)
+**Status:** Phase 1 complete (Tasks 1.1–1.7); Phase 2 not started
 
 ---
 
@@ -30,44 +30,35 @@ a `Depends on` note says otherwise.
 
 ## Current codebase snapshot
 
-> This section gives a cold agent enough context to orient before reading individual tasks.
+> **Current as of Phase 1 complete.** Dead packages from the original NectarAPI import
+> (`tokens/`, `hsm/`, `prism/`, `tokensdecoder/`, `ca/`) are deleted. Source on disk is
+> ground truth; individual task "Current state" sections below may still describe pre-change
+> layout for historical context.
 
 ### Repository layout (non-test, non-target)
 
 ```
 nxt-sts/
-├── pom.xml                        ← Maven build; artifact id: jambu (to be renamed)
-├── Dockerfile                     ← Single-stage; copies pre-built JAR; no tag pin
-├── README.md                      ← Reasonably complete; gaps noted in tasks
-├── LICENSE / NOTICE / AUTHORS.md / CONTRIBUTORS.md / CONTRIBUTING.md
+├── pom.xml                        ← artifact id: nxt-sts, version 1.0.0
+├── Dockerfile                     ← Single-stage; copies pre-built JAR (rewritten in Phase 3)
+├── docs/capabilities.md           ← Token type matrix (API vs library)
 └── src/main/java/co/nxtgrid/
-    ├── MyApplication.java         ← @SpringBootApplication + @RestController combined
-    ├── RequestData.java           ← Request DTO (no validation annotations)
+    ├── StsApplication.java        ← @SpringBootApplication + @RestController combined
+    ├── RequestData.java           ← Request DTO (no validation annotations yet)
     ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component)
-    ├── token/                     ← STS domain model (derived from NectarAPI) — KEEP
-    │   ├── domain/                ← Value objects: Amount, DecoderKey, TokenIdentifier, etc.
-    │   ├── exceptions/            ← ~50 domain exception classes
-    │   └── generators/
-    │       ├── decoderkeygenerator/
-    │       ├── tokensdecoder/     ← Token decode path — NOT wired up; delete
-    │       └── tokensgenerator/
-    │           ├── nativetoken/   ← LIVE: the four active generators
-    │           └── prism/         ← Dead: HSM-backed generator path — delete
-    ├── ca/                        ← BouncyCastle cipher wrappers — partially dead; audit
-    ├── hsm/prism/                 ← Dead: Prism HSM client (Thrift) — delete entire package
-    └── tokens/                    ← Dead: NectarAPI service layer — delete entire package
-        ├── service/               ← TokensService interface + TokensServiceImpl (not @Service)
-        ├── utils/request/         ← RequestUtils (commented-out @Component; HTTP to NectarAPI)
-        ├── response/              ← ApiResponse DTO
-        ├── entity/                ← Token entity
-        └── constant/              ← StringConstants
+    └── token/                     ← sts-core boundary: co.nxtgrid.token.*
+        ├── domain/
+        ├── exceptions/            ← domain exceptions; decode/ subpackage (from tokensdecoder)
+        └── generators/
+            ├── decoderkeygenerator/
+            └── tokensgenerator/nativetoken/   ← LIVE: the four active generators
 ```
 
-### The live request path (everything outside this is dead)
+### The live request path
 
 ```
 POST /token
-    └── MyApplication.home(RequestData body)
+    └── StsApplication.home(RequestData body)
             ├── Constructs TokenIdentifier, RandomNo, Amount, DecoderKey, KeyExpiryNumber
             ├── Dispatches on body.getType() with if/else:
             │       "TOP_UP"          → TransferElectricityCreditTokenGenerator
@@ -83,18 +74,13 @@ All four generators live under:
 
 ### Active Maven dependencies
 
-| Dependency | Used by live path? | Action |
+| Dependency | Used by live path? | Notes |
 |---|---|---|
-| `spring-boot-starter-web` | Yes | Keep |
-| `spring-boot-starter-validation` | Yes (unused — add `@Valid`) | Keep |
+| `spring-boot-starter-web` | Yes | HTTP server |
+| `spring-boot-starter-validation` | Yes (unused — add `@Valid` in Phase 2) | Keep |
 | `bcprov-jdk15on:1.70` | Yes (STA crypto) | Keep; plan upgrade to `bcprov-jdk18on` |
 | `joda-time:2.13` | Yes (`DateTimeConverter`, generators) | Keep for now |
-| `gson:2.11` | Dead (`tokens/utils/`) | Delete with package |
-| `libthrift:0.18.1` | Dead (`hsm/prism/`) | Delete with package |
-| `jedis:5.2` | Dead (`tokens/utils/`) | Delete with package |
-| `json:20240303` | Dead (`tokens/utils/`) | Delete with package |
-| `jakarta.xml.bind-api:4.0.2` | Dead (`tokens/utils/`) | Delete with package |
-| `junit-jupiter-api:5.11` | Test | Keep; add test classes |
+| `junit-jupiter-api:5.11` | Test | Keep; add test classes in Phase 2 |
 
 ---
 
@@ -138,13 +124,14 @@ from the start of this effort.
 
 | Layer | Packages | Allowed dependencies |
 |---|---|---|
-| **Core** (future `sts-core`) | `co.nxtgrid.token.*`, `co.nxtgrid.ca.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
+| **Core** (future `sts-core`) | `co.nxtgrid.token.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
 | **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controllers, DTOs, strategies, OpenAPI config) | Spring Boot freely; depends on core packages |
 
 ### Concrete rules every task must follow
 
-1. **Never add a Spring import to any file under `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.**
+1. **Never add a Spring import to any file under `co.nxtgrid.token.*`.**
    These packages must compile without Spring on the classpath. They are the future `sts-core`.
+   (`co.nxtgrid.ca.*` was audited and fully removed in Task 1.4.)
 
 2. **`TokenStrategy` implementations live in `co.nxtgrid.strategy.*` (wrapper layer), not in
    `token/`.** They translate an HTTP request into a domain call; that translation belongs in
@@ -160,16 +147,15 @@ from the start of this effort.
 
 5. **`DateTimeConverter.java` is the only current Spring file in a near-core location; it is
    deleted in Task 2.3.** Until then, do not create any other Spring-annotated file inside
-   `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+   `co.nxtgrid.token.*`.
 
 ### Verification (run after any task that touches these packages)
 
 ```bash
 grep -r "import org.springframework" src/main/java/co/nxtgrid/token/
-grep -r "import org.springframework" src/main/java/co/nxtgrid/ca/
 ```
 
-Both commands must return no results when the task is marked done.
+Must return no results when the task is marked done.
 
 ---
 
@@ -345,7 +331,11 @@ Renamed `jambu` → `nxt-sts`, version `1.0-SNAPSHOT` → `1.0.0`, `MyApplicatio
 ---
 
 ### Task 1.7 — Fix `.gitignore`; remove tracked `.DS_Store`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+`.DS_Store` was already untracked (removed in a prior commit); `git check-ignore -v .DS_Store`
+confirms the rule. Replaced `.gitignore`: `target/*` + `!target/jambu-…jar` exception →
+`target/`; added `.vscode/`, `.idea/`, `*.iml`. No `git rm --cached` required.
 - **Depends on:** nothing
 
 **Current state:**
@@ -489,7 +479,7 @@ TokenStrategy strategy = strategies.stream()
 > **`sts-core` boundary check:** all five files above live in `co.nxtgrid.strategy.*` (wrapper
 > layer). They may import from `co.nxtgrid.token.*` freely but must not import
 > `org.springframework.*` beyond `@Component`. Run the invariant verification grep after this
-> task to confirm no Spring imports crept into `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+> task to confirm no Spring imports crept into `co.nxtgrid.token.*`.
 
 **Done when:** all four token types produce the same tokens as before (verified by test vectors
 added in Task 2.5). Unknown type strings return HTTP 400, not HTTP 200 with null body.

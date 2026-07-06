@@ -22,7 +22,7 @@ Execute plan tasks **in order**; respect `Depends on`. Mark `[x]` only when done
 
 ## Hard constraints
 
-- **No Spring** in `co.nxtgrid.token.*` or `co.nxtgrid.ca.*` (future `sts-core`).
+- **No Spring** in `co.nxtgrid.token.*` (future `sts-core`).
 - Preserve token output unless the task changes crypto and vectors are updated.
 - Minimize scope — no drive-by refactors or dependency upgrades unless the task says so.
 - Never log or commit decoder keys.
