@@ -1009,7 +1009,7 @@ passes; test context logs expose health + info under `/actuator`.
 ---
 
 ### Task 3.4 — Add GitHub Actions CI pipeline
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** 3.2 (Maven wrapper must exist for CI to use it)
 
 **Current state:** `.github/` does not exist.
@@ -1063,6 +1063,10 @@ jobs:
 
 **Done when:** a PR to `main` triggers the build workflow and `mvn verify` passes in CI.
 Pushing a `v1.0.0` tag triggers the release workflow and publishes the image to GHCR.
+
+**Notes:** Added both workflows per plan. `./mvnw verify` passes locally. Workflows activate
+after push to GitHub; first green run confirms CI. Release: tag `v*.*.*` on `main`, then set
+GHCR package visibility if needed.
 
 ---
 
