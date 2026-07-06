@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Tasks 1.1–1.3 complete)
+**Status:** In progress (Phase 1 — Tasks 1.1–1.4 complete)
 
 ---
 
@@ -263,7 +263,14 @@ no results. Build succeeds.
 ---
 
 ### Task 1.4 — Audit and prune `co.nxtgrid.ca` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Audit result:** `grep -r "import co.nxtgrid.ca" src/` after Tasks 1.1–1.3 returned no matches
+outside the package itself. The live `nativetoken` path uses STA/DEA crypto in
+`co.nxtgrid.token.domain.encryptionalgorithm.*` (javax.crypto directly), not the `ca` wrappers.
+All 10 files were deleted: `Provider`, `Metadata`, `GeneralCipher`, `Encode`, four symmetric
+ciphers (`AES128Cipher`, `DESCipher`, `DesedeCipher`, `SymmetricCipher`), and
+`FixedRandom` / `HexByteUtils`.
 - **Depends on:** 1.1, 1.2, 1.3
 
 **Current state:**
