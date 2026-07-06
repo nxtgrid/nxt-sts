@@ -1,29 +1,60 @@
 package co.nxtgrid.api;
 
-import org.joda.time.DateTime;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 
 public class TokenRequest {
-    private double kwh;
-    private long powerLimit;
-    private String decoderKey;
-    private int randomNumber;
-    private DateTime issueDate;
-    private String type;
 
-    public String getType() {
-        return this.type;
+    @NotNull
+    @Pattern(regexp = "^[0-9A-Fa-f]{16}$", message = "decoderKey must be exactly 16 hex characters")
+    private String decoderKey;
+
+    @NotNull
+    private TokenType type;
+
+    @NotNull
+    private LocalDateTime issueDate;
+
+    @Min(value = 0, message = "randomNumber must be an integer between 0 and 15")
+    @Max(value = 15, message = "randomNumber must be an integer between 0 and 15")
+    private int randomNumber;
+
+    private Double kwh;
+    private Long powerLimit;
+
+    @AssertTrue(message = "kwh is required for TOP_UP")
+    @JsonIgnore
+    public boolean isKwhValidForType() {
+        return type != TokenType.TOP_UP || kwh != null;
     }
 
-    public void setType(String type) {
+    @AssertTrue(message = "powerLimit is required for SET_POWER_LIMIT")
+    @JsonIgnore
+    public boolean isPowerLimitValidForType() {
+        return type != TokenType.SET_POWER_LIMIT || powerLimit != null;
+    }
+
+    public TokenType getType() {
+        return type;
+    }
+
+    public void setType(TokenType type) {
         this.type = type;
     }
 
-    public DateTime getIssueDate() {
+    public LocalDateTime getIssueDate() {
         return issueDate;
     }
 
-    public void setIssueDate(String issueDate) {
-        this.issueDate = DateTime.parse(issueDate);
+    public void setIssueDate(LocalDateTime issueDate) {
+        this.issueDate = issueDate;
     }
 
     public int getRandomNumber() {
@@ -34,11 +65,11 @@ public class TokenRequest {
         this.randomNumber = randomNumber;
     }
 
-    public double getKwh() {
+    public Double getKwh() {
         return kwh;
     }
 
-    public void setKwh(double kwh) {
+    public void setKwh(Double kwh) {
         this.kwh = kwh;
     }
 
@@ -50,11 +81,11 @@ public class TokenRequest {
         this.decoderKey = decoderKey;
     }
 
-    public long getPowerLimit() {
+    public Long getPowerLimit() {
         return powerLimit;
     }
 
-    public void setPowerLimit(long powerLimit) {
+    public void setPowerLimit(Long powerLimit) {
         this.powerLimit = powerLimit;
     }
 }

@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import co.nxtgrid.strategy.TokenStrategy;
 
+import jakarta.validation.Valid;
+
 @RestController
 @RequestMapping("/token")
 public class TokenController {
@@ -20,7 +22,7 @@ public class TokenController {
     }
 
     @PostMapping
-    TokenResponse generateToken(@RequestBody TokenRequest body) {
+    TokenResponse generateToken(@Valid @RequestBody TokenRequest body) {
         try {
             TokenStrategy strategy = strategies.stream()
                 .filter(s -> s.supports(body.getType()))

@@ -3,6 +3,7 @@ package co.nxtgrid.strategy;
 import org.springframework.stereotype.Component;
 
 import co.nxtgrid.api.TokenRequest;
+import co.nxtgrid.api.TokenType;
 import co.nxtgrid.token.domain.Amount;
 import co.nxtgrid.token.domain.BaseDate;
 import co.nxtgrid.token.domain.KeyExpiryNumber;
@@ -24,13 +25,14 @@ public class TransferElectricityCreditStrategy implements TokenStrategy {
     private static final int RANDOM_NO_BIT_LENGTH = 4;
 
     @Override
-    public boolean supports(String type) {
-        return "TOP_UP".equals(type);
+    public boolean supports(TokenType type) {
+        return TokenType.TOP_UP == type;
     }
 
     @Override
     public String generate(TokenRequest request) throws Exception {
-        TokenIdentifier tokenIdentifier = new TokenIdentifier(request.getIssueDate(), STS_BASE_DATE);
+        TokenIdentifier tokenIdentifier =
+            new TokenIdentifier(StrategySupport.toJodaDateTime(request.getIssueDate()), STS_BASE_DATE);
 
         BitString randomValueBitString = new BitString((long) request.getRandomNumber());
         randomValueBitString.setLength(RANDOM_NO_BIT_LENGTH);

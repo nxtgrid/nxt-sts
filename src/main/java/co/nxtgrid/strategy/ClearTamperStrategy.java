@@ -3,6 +3,7 @@ package co.nxtgrid.strategy;
 import org.springframework.stereotype.Component;
 
 import co.nxtgrid.api.TokenRequest;
+import co.nxtgrid.api.TokenType;
 import co.nxtgrid.token.domain.BaseDate;
 import co.nxtgrid.token.domain.Pad;
 import co.nxtgrid.token.domain.RandomNo;
@@ -23,13 +24,14 @@ public class ClearTamperStrategy implements TokenStrategy {
     private static final int PAD_BIT_LENGTH = 16;
 
     @Override
-    public boolean supports(String type) {
-        return "CLEAR_TAMPER".equals(type);
+    public boolean supports(TokenType type) {
+        return TokenType.CLEAR_TAMPER == type;
     }
 
     @Override
     public String generate(TokenRequest request) throws Exception {
-        TokenIdentifier tokenIdentifier = new TokenIdentifier(request.getIssueDate(), STS_BASE_DATE);
+        TokenIdentifier tokenIdentifier =
+            new TokenIdentifier(StrategySupport.toJodaDateTime(request.getIssueDate()), STS_BASE_DATE);
 
         BitString randomValueBitString = new BitString((long) request.getRandomNumber());
         randomValueBitString.setLength(RANDOM_NO_BIT_LENGTH);

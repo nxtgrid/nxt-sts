@@ -45,10 +45,13 @@ nxt-sts/
 └── src/main/java/co/nxtgrid/
     ├── StsApplication.java        ← @SpringBootApplication bootstrap only
     ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component; deleted in 2.3)
-    ├── api/                       ← HTTP layer: controllers, request/response DTOs
-    │   ├── TokenController.java   ← injects List<TokenStrategy>, dispatches
-    │   ├── TokenRequest.java
-    │   └── TokenResponse.java
+    ├── api/                       ← HTTP layer: controllers, request/response DTOs, errors
+    │   ├── TokenController.java
+    │   ├── TokenRequest.java      ← Bean Validation + LocalDateTime + TokenType
+    │   ├── TokenResponse.java
+    │   ├── TokenType.java
+    │   ├── ErrorResponse.java
+    │   └── StsExceptionHandler.java
     ├── strategy/                  ← one TokenStrategy @Component per token type
     │   ├── TokenStrategy.java
     │   ├── TransferElectricityCreditStrategy.java
@@ -530,8 +533,16 @@ added in Task 2.5). Unknown type strings return HTTP 400, not HTTP 200 with null
 ---
 
 ### Task 2.3 — Add input validation to `TokenRequest`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
+
+**Implementation notes:** `TokenRequest` now uses Bean Validation (`@NotNull`, `@Pattern`, `@Min`/`@Max`,
+`@AssertTrue` for conditional `kwh`/`powerLimit`). `@Valid` added on `TokenController`. API layer
+uses `java.time.LocalDateTime` (Jackson native); strategies convert to Joda via `StrategySupport`.
+`DateTimeConverter.java` deleted. `TokenType` enum added in `co.nxtgrid.api` (pulled forward from
+Task 2.5); strategies updated to `supports(TokenType)`. Minimal `StsExceptionHandler` +
+`ErrorResponse` added for validation and malformed-JSON cases (full domain/500 handling remains
+Task 2.4). Manual curl verification on port 8081: all four done-criteria cases return HTTP 400 JSON.
 
 **Current state:**
 `RequestData.java` has no validation annotations. `spring-boot-starter-validation` is already
@@ -654,7 +665,7 @@ overflow on that field).
 ---
 
 ### Task 2.5 — Add `TokenType` enum
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06, pulled forward into Task 2.3)
 - **Depends on:** nothing (can run in parallel)
 
 **Current state:**
@@ -1131,3 +1142,7 @@ no `utils` package; (3) `ErrorResponse`/`RootController`/OpenAPI → `co.nxtgrid
 refactor — `requestID="asda"` and null-on-unknown/exception kept; 400/500 mapping → 2.4, UUID
 requestID → after 2.6 vectors. Also noted: `co.nxtgrid.hsm.*` (19 files) is still on disk despite
 Task 1.2 being marked complete — track as a separate Phase 1 cleanup, out of scope for 2.2.
+
+2026-07-06 — [2.3] — Bean Validation on `TokenRequest`; `LocalDateTime` API layer; `TokenType`
+enum + strategy `supports(TokenType)`; `DateTimeConverter` deleted; minimal `StsExceptionHandler`
+for validation/malformed JSON (full error mapping → Task 2.4).
