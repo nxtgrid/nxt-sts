@@ -122,6 +122,55 @@ All four generators live under:
 
 ---
 
+## Architectural invariant — `sts-core` boundary
+
+> **This constraint applies to every task in phases 1–3. It is not deferred. Violating it
+> would require a code redesign before Phase 4 can begin.**
+
+The repository's roadmap includes extracting the STS cryptographic engine into a standalone
+`sts-core` Maven artifact with no Spring dependency (Phase 4). For that extraction to remain a
+mechanical packaging exercise, the boundary between the core and the HTTP wrapper must be clean
+from the start of this effort.
+
+### The boundary
+
+| Layer | Packages | Allowed dependencies |
+|---|---|---|
+| **Core** (future `sts-core`) | `co.nxtgrid.token.*`, `co.nxtgrid.ca.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
+| **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controller, DTOs, strategies, config) | Spring Boot freely; depends on core packages |
+
+### Concrete rules every task must follow
+
+1. **Never add a Spring import to any file under `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.**
+   These packages must compile without Spring on the classpath. They are the future `sts-core`.
+
+2. **`TokenStrategy` implementations live in `co.nxtgrid.strategy.*` (wrapper layer), not in
+   `token/`.** They translate an HTTP request into a domain call; that translation belongs in
+   the wrapper. They may carry `@Component` as a Spring marker, but removing that annotation
+   must leave them as valid, compilable pure-Java classes.
+
+3. **Domain objects (`token/domain/*`) are plain Java value objects.** No `@JsonProperty`,
+   no `@Entity`, no `@Component`, no framework annotations of any kind.
+
+4. **The four generator classes under `nativetoken/` are not modified beyond what dead-code
+   deletion requires.** They receive domain objects and return domain objects — that is the
+   entire contract.
+
+5. **`DateTimeConverter.java` is the only current Spring file in a near-core location; it is
+   deleted in Task 2.3.** Until then, do not create any other Spring-annotated file inside
+   `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+
+### Verification (run after any task that touches these packages)
+
+```bash
+grep -r "import org.springframework" src/main/java/co/nxtgrid/token/
+grep -r "import org.springframework" src/main/java/co/nxtgrid/ca/
+```
+
+Both commands must return no results when the task is marked done.
+
+---
+
 ## Phase 1 — Delete dead code and prune dependencies
 
 **Goal:** reduce the repository to only what the live path uses. No behavior changes.
@@ -402,8 +451,14 @@ TokenStrategy strategy = strategies.stream()
 - `strategy/ClearTamperStrategy.java`
 - `strategy/SetMaximumPowerLimitStrategy.java`
 
+> **`sts-core` boundary check:** all five files above live in `co.nxtgrid.strategy.*` (wrapper
+> layer). They may import from `co.nxtgrid.token.*` freely but must not import
+> `org.springframework.*` beyond `@Component`. Run the invariant verification grep after this
+> task to confirm no Spring imports crept into `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+
 **Done when:** all four token types produce the same tokens as before (verified by test vectors
 added in Task 2.5). Unknown type strings return HTTP 400, not HTTP 200 with null body.
+`grep -r "import org.springframework" src/main/java/co/nxtgrid/token/` returns no results.
 
 ---
 
@@ -810,6 +865,9 @@ context from this document. `CONTRIBUTING.md` explains how to add a token type c
 
 **Deferred per ADR-001 decision 7.** Track separately when there is a concrete consumer
 (another JVM service wanting to embed STS generation without an HTTP call).
+
+If the architectural invariant (see above) was respected throughout phases 1–3, Phase 4 is
+purely a Maven packaging and publishing exercise — no code logic needs to change.
 
 Work items:
 - **4.1 Split into multi-module Maven project:** create a `sts-core` module (no Spring,

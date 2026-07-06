@@ -122,16 +122,38 @@ to build and deploy the container image themselves using the provided Dockerfile
 A GitHub release workflow that publishes the image to GHCR is added alongside the CI pipeline
 so tagged releases produce a usable artifact automatically.
 
-### 7. Optional future: core library extraction and multi-language ports
+### 7. Preserve the `sts-core` extraction boundary in all current work
 
-Extracting the STA/EA07 cryptographic engine into a standalone `sts-core` artifact (no Spring,
-published to Maven Central) is the right next step after this preparation, enabling the Java
-implementation to be embedded in other JVM services. Multi-language ports (TypeScript/npm, PHP/
-Composer, Python/PyPI) are feasible because the STA algorithm is deterministic and can be
-validated against shared test vectors; however, they represent a separate, significant effort
-and are explicitly deferred. The shared conformance test vectors that would anchor any port
-are a deliverable of this preparation effort (see decision 3 / task: add tests with known
-STS vectors).
+Extracting the STA/EA07 cryptographic engine into a standalone `sts-core` Maven artifact (no
+Spring, published to Maven Central) is the planned next effort after this preparation, enabling
+the Java implementation to be embedded in other JVM services without an HTTP call. To ensure
+that extraction remains a mechanical packaging exercise and not a redesign, **all work done
+in decisions 1–6 must respect the following boundary:**
+
+- **No Spring imports in `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.** These packages form
+  the future `sts-core` and must compile without Spring on the classpath. If any file in these
+  packages currently imports from `org.springframework.*`, that import must be removed as part
+  of any task that touches the file.
+- **`TokenStrategy` implementations are wrapper-layer code.** The four strategy classes
+  introduced in decision 3 belong in `co.nxtgrid.strategy.*` (the wrapper layer), not inside
+  `token/`. They bridge an HTTP request to a domain call; that translation is the wrapper's
+  responsibility. They may carry `@Component` as a Spring marker but must contain no other
+  framework dependencies — removing `@Component` must leave them as compilable pure-Java classes.
+- **HTTP and web concepts stay in the wrapper layer.** `TokenController`, request/response DTOs,
+  validation annotations, and exception handlers live in `co.nxtgrid` (top-level package), not
+  inside `token/` or `ca/`.
+- **Domain objects (`token/domain/*`) remain plain Java value objects.** No JPA, no Jackson
+  annotations, no framework dependencies of any kind.
+
+This constraint is **active immediately** — it is not deferred with Phase 4. Violating it in
+phases 1–3 would require a code redesign before the library can be extracted.
+
+The extraction itself (multi-module Maven split, Maven Central publication, conformance test
+vectors) is deferred to Phase 4 in the execution plan.
+
+Multi-language ports (TypeScript/npm, PHP/Composer, Python/PyPI) are feasible because the STA
+algorithm is deterministic and can be validated against shared test vectors; they are deferred
+to Phase 5 and depend on Phase 4.3 (conformance test vectors).
 
 ---
 
@@ -148,6 +170,9 @@ STS vectors).
   to receive contributions confidently.
 - Known-good STS test vectors established in this effort are the foundation for any future
   language port.
+- The `sts-core` boundary is enforced from the start: `co.nxtgrid.token.*` and
+  `co.nxtgrid.ca.*` carry no Spring imports after this effort, meaning Phase 4 (library
+  extraction) is a Maven packaging task, not a code redesign.
 
 ### Negative / Risks
 
