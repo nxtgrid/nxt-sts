@@ -20,7 +20,7 @@ import co.nxtgrid.token.generators.tokensdecoder.class1.InitiateMeterTestOrDispl
 import co.nxtgrid.token.generators.tokensdecoder.class2.*;
 import co.nxtgrid.token.generators.utils.Utils;
 import co.nxtgrid.token.miscellaneous.Strings;
-import co.nxtgrid.tokens.service.impl.exceptions.InvalidTokenNoException;
+import co.nxtgrid.token.exceptions.InvalidTokenNoException;
 import org.apache.thrift.TException;
 
 import java.io.IOException;

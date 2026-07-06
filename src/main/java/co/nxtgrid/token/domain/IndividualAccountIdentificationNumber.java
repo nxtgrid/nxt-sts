@@ -6,7 +6,7 @@ import co.nxtgrid.token.exceptions.InvalidIssuerIAINComponents;
 import co.nxtgrid.token.exceptions.InvalidManufacturerCodeException;
 import co.nxtgrid.token.generators.utils.LuhnAlgorithm;
 import co.nxtgrid.token.miscellaneous.Strings;
-import co.nxtgrid.tokens.service.impl.exceptions.InvalidIndividualAccountIdentificationNumber;
+import co.nxtgrid.token.exceptions.InvalidIndividualAccountIdentificationNumber;
 
 public class IndividualAccountIdentificationNumber implements Entity {
 

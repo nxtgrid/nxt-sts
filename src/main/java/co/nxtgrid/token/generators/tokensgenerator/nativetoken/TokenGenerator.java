@@ -6,9 +6,6 @@ import co.nxtgrid.token.domain.encryptionalgorithm.EncryptionAlgorithm;
 import co.nxtgrid.token.domain.keys.decoder.DecoderKey;
 import co.nxtgrid.token.domain.token.Token;
 import co.nxtgrid.token.domain.tokenclass.TokenClass;
-import co.nxtgrid.tokens.service.impl.generate.DecoderKeyGeneratorManager;
-
-import java.util.Map;
 
 public abstract class TokenGenerator <T extends Token>{
 

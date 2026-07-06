@@ -10,12 +10,14 @@ NXT STS is a lightweight Spring Boot microservice that generates and manages pre
 
 ## Supported Token Types
 
-| Type constant | STS Class | Description |
-|---|---|---|
-| `TOP_UP` | Class 0 | Transfer electricity credit |
-| `CLEAR_CREDIT` | Class 2 | Clear existing credit on meter |
-| `CLEAR_TAMPER` | Class 2 | Clear tamper condition |
-| `SET_POWER_LIMIT` | Class 2 | Set maximum power limit |
+Four token types are exposed via `POST /token` today. The underlying STS library implements many more; see **[docs/capabilities.md](docs/capabilities.md)** for the full matrix (generate, decode, and REST API columns).
+
+| API `type` | STS class / subclass | Description | REST API |
+|---|---|---|:---:|
+| `TOP_UP` | 0 / 0 | Transfer electricity credit (kWh) | **Yes** |
+| `CLEAR_CREDIT` | 2 / 1 | Clear existing credit on meter | **Yes** |
+| `CLEAR_TAMPER` | 2 / 5 | Clear tamper condition | **Yes** |
+| `SET_POWER_LIMIT` | 2 / 0 | Set maximum power limit | **Yes** |
 
 Tokens are generated using the **Standard Transfer Algorithm (STA / EA07)** via the [Bouncy Castle](https://www.bouncycastle.org/) cryptographic library.
 

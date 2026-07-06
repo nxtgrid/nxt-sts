@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** Not started
+**Status:** In progress (Phase 1 — Task 1.1 complete)
 
 ---
 
@@ -182,7 +182,12 @@ Both commands must return no results when the task is marked done.
 ---
 
 ### Task 1.1 — Delete `co.nxtgrid.tokens` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** Two exception classes referenced from the live `token/` path and from
+packages deleted in later tasks were relocated to `co.nxtgrid.token.exceptions` before
+deletion: `InvalidIndividualAccountIdentificationNumber`, `InvalidTokenNoException`.
+Unused import of `DecoderKeyGeneratorManager` removed from `nativetoken/TokenGenerator.java`.
 - **Depends on:** nothing
 
 **Current state:**

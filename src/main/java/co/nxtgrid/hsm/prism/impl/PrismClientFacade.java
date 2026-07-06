@@ -20,7 +20,7 @@ import co.nxtgrid.token.domain.tokensubclass.class1.InitiateMeterTestDisplay1Tok
 import co.nxtgrid.token.domain.tokensubclass.class1.InitiateMeterTestDisplay2TokenSubClass;
 import co.nxtgrid.token.exceptions.*;
 import co.nxtgrid.token.miscellaneous.Strings;
-import co.nxtgrid.tokens.service.impl.exceptions.InvalidTokenNoException;
+import co.nxtgrid.token.exceptions.InvalidTokenNoException;
 import org.apache.thrift.TException;
 import org.joda.time.DateTime;
 
