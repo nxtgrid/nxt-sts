@@ -3,13 +3,10 @@ package co.nxtgrid;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormat;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import co.nxtgrid.token.domain.Amount;
@@ -24,7 +21,6 @@ import co.nxtgrid.token.domain.base.BitString;
 import co.nxtgrid.token.domain.encryptionalgorithm.StandardTransferAlgorithmEncryptionAlgorithm;
 import co.nxtgrid.token.domain.keys.decoder.DecoderKey;
 import co.nxtgrid.token.domain.token.Token;
-import co.nxtgrid.token.domain.token.class0.TransferElectricityCreditToken;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class0.TransferElectricityCreditTokenGenerator;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearCreditTokenGenerator;
 import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.ClearTamperConditionTokenGenerator;
@@ -32,8 +28,8 @@ import co.nxtgrid.token.generators.tokensgenerator.nativetoken.class2.SetMaximum
 
 @RestController
 @SpringBootApplication
-public class MyApplication {
-    
+public class StsApplication {
+
     @RequestMapping("/token")
     Map<String, Object> home(
         @RequestBody() RequestData body
@@ -59,9 +55,9 @@ public class MyApplication {
             String requestID = "asda";
             // initialize the transfer credit token generator instance
             StandardTransferAlgorithmEncryptionAlgorithm staEncryptionAlgorithm = new StandardTransferAlgorithmEncryptionAlgorithm();
-            
+
             Token generatedToken;
-            String tokenType = body.getType(); 
+            String tokenType = body.getType();
             if(tokenType.equals("TOP_UP")) {
                 TransferElectricityCreditTokenGenerator tokenGenerator = new TransferElectricityCreditTokenGenerator(requestID, tokenIdentifier, randomNo, amountPurchased, keyExpiryNumber,
                     decoderKey, staEncryptionAlgorithm );
@@ -79,7 +75,7 @@ public class MyApplication {
                 BitString bitstring = new BitString();
                 bitstring.setValue("0000000000000000");
                 bitstring.setLength(16);
-                Pad pad = new Pad(bitstring); 
+                Pad pad = new Pad(bitstring);
                 ClearTamperConditionTokenGenerator tokenGenerator = new ClearTamperConditionTokenGenerator(requestID, randomNo, tokenIdentifier, pad, decoderKey, staEncryptionAlgorithm);
                 generatedToken = tokenGenerator.generate();
             } else if (tokenType.equals("SET_POWER_LIMIT")) {
@@ -89,15 +85,10 @@ public class MyApplication {
             } else {
                 return null;
             }
-                
-            
-            // String token = generatedToken.getTokenNo();
-            // return Map.of(
-            //     "token", generatedToken.getTokenNo()
 
             Map<String, Object> response = new HashMap<>();
             response.put("token", generatedToken.getTokenNo());
-                
+
             return response;
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,9 +96,9 @@ public class MyApplication {
 
         return null;
     }
-    
+
     public static void main(String[] args) {
-        SpringApplication.run(MyApplication.class, args);
+        SpringApplication.run(StsApplication.class, args);
     }
 
     public static byte[] convertHexStringToReversedByteArray(String hexString) {

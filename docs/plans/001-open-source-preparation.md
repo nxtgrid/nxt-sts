@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** In progress (Phase 1 — Tasks 1.1–1.5 complete)
+**Status:** In progress (Phase 1 — Tasks 1.1–1.6 complete)
 
 ---
 
@@ -318,7 +318,10 @@ obvious orphans will be flagged).
 ---
 
 ### Task 1.6 — Rename artifact and main class
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+Renamed `jambu` → `nxt-sts`, version `1.0-SNAPSHOT` → `1.0.0`, `MyApplication` →
+`StsApplication`. Updated `pom.xml`, `Dockerfile`, and README JAR/docker references.
 - **Depends on:** nothing (can run in parallel with 1.1–1.5)
 
 **Current state:**

@@ -29,7 +29,7 @@ Tokens are generated using the **Standard Transfer Algorithm (STA / EA07)** via 
 HTTP client
     │
     ▼
-POST /token  (Spring Boot REST controller — MyApplication)
+POST /token  (Spring Boot REST controller — StsApplication)
     │
     ├── Parses RequestData (type, issueDate, randomNumber, kwh, decoderKey, powerLimit)
     │
@@ -71,20 +71,20 @@ POST /token  (Spring Boot REST controller — MyApplication)
 mvn clean install -DskipTests
 ```
 
-The build produces `target/jambu-1.0-SNAPSHOT.jar`. The `target/` directory is git-ignored; build artifacts are never committed.
+The build produces `target/nxt-sts-1.0.0.jar`. The `target/` directory is git-ignored; build artifacts are never committed.
 
 ---
 
 ## Running
 
 ```bash
-java -jar target/jambu-1.0-SNAPSHOT.jar
+java -jar target/nxt-sts-1.0.0.jar
 ```
 
 The service starts on **port 8080** by default (Spring Boot embedded Tomcat). Override with:
 
 ```bash
-java -jar target/jambu-1.0-SNAPSHOT.jar --server.port=8084
+java -jar target/nxt-sts-1.0.0.jar --server.port=8084
 ```
 
 ---
@@ -96,10 +96,10 @@ java -jar target/jambu-1.0-SNAPSHOT.jar --server.port=8084
 mvn clean install -DskipTests
 
 # 2. Build the image
-docker build -t jambu .
+docker build -t nxt-sts .
 
 # 3. Run the container
-docker run -p 8080:8080 jambu
+docker run -p 8080:8080 nxt-sts
 ```
 
 ---
