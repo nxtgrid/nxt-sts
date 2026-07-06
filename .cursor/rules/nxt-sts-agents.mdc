@@ -1,0 +1,32 @@
+---
+description: NXT STS agent workflow, plan execution, and sts-core boundary
+alwaysApply: true
+---
+
+# NXT STS — agent rules
+
+**Role:** senior Java / Spring Boot engineer; clean code and design patterns.
+
+## Workflow
+
+1. Plan before acting; use todos when more than one step.
+2. Complete **one** todo or plan task, then **stop** for human review.
+3. **Never** proceed to the next item until the human explicitly prompts you.
+4. Keep changes in small, reviewable chunks. Human reviews and commits — do not commit/push unless asked.
+
+## Before coding
+
+Read `AGENTS.md`, then the relevant task in `docs/plans/001-open-source-preparation.md` and `docs/architecture/001-open-source-preparation.md`. Source files are ground truth.
+
+Execute plan tasks **in order**; respect `Depends on`. Mark `[x]` only when done criteria are met.
+
+## Hard constraints
+
+- **No Spring** in `co.nxtgrid.token.*` or `co.nxtgrid.ca.*` (future `sts-core`).
+- Preserve token output unless the task changes crypto and vectors are updated.
+- Minimize scope — no drive-by refactors or dependency upgrades unless the task says so.
+- Never log or commit decoder keys.
+
+## Done
+
+`mvn verify` passes; boundary grep clean if core touched; human sign-off before next task.

@@ -106,6 +106,8 @@ All four generators live under:
   no existing file changes.
 - The service returns correct HTTP status codes for all error cases and never returns a null
   or empty body.
+- `GET /` returns a JSON service index; unknown routes return JSON errors (no whitelabel HTML).
+- OpenAPI/Swagger UI documents the API, including the `randomNumber` field (STS RND, 0–15).
 - A CI pipeline builds and tests on every PR. A GitHub release workflow publishes a container
   image to GHCR on tag.
 - `docker-compose up` starts the service locally with no prior knowledge of Spring Boot.
@@ -137,7 +139,7 @@ from the start of this effort.
 | Layer | Packages | Allowed dependencies |
 |---|---|---|
 | **Core** (future `sts-core`) | `co.nxtgrid.token.*`, `co.nxtgrid.ca.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
-| **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controller, DTOs, strategies, config) | Spring Boot freely; depends on core packages |
+| **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controllers, DTOs, strategies, OpenAPI config) | Spring Boot freely; depends on core packages |
 
 ### Concrete rules every task must follow
 
@@ -348,9 +350,10 @@ the rule applies.
 ## Phase 2 — Harden the HTTP wrapper
 
 **Goal:** the `POST /token` endpoint returns correct HTTP status codes and structured error
-bodies for all failure cases. Adding a new token type requires one new class only.
+bodies for all failure cases. Adding a new token type requires one new class only. The API is
+self-describing via OpenAPI/Swagger UI and a JSON root route.
 
-**Estimated effort:** ~4–5 days
+**Estimated effort:** ~5–6 days
 
 ---
 
@@ -488,7 +491,7 @@ public class TokenRequest {
     private LocalDateTime issueDate;
 
     @Min(0) @Max(15)
-    private int randomNumber;
+    private int randomNumber;  // STS 4-bit RND — see Task 2.7 for @Schema documentation
 
     // Conditionally required: kwh required for TOP_UP, powerLimit required for SET_POWER_LIMIT
     private Double kwh;
@@ -515,7 +518,9 @@ on it.
 **Done when:**
 - `POST /token` with a 15-character decoder key returns HTTP 400 with `{"error": "...", "field": "decoderKey"}`.
 - `POST /token` with `"type": "INVALID"` returns HTTP 400.
-- `POST /token` with `"randomNumber": 16` returns HTTP 400.
+- `POST /token` with `"randomNumber": 16` returns HTTP 400 with a message indicating 0–15.
+- `POST /token` with `"randomNumber": 125489697135` returns HTTP 400 (JSON parse / validation
+  error, not an empty body).
 
 ---
 
@@ -526,6 +531,9 @@ on it.
 **Current state:**
 The `try/catch` in `MyApplication.home()` calls `e.printStackTrace()` and returns `null`,
 which Spring serializes as HTTP 200 with an empty body. There is no structured error response.
+Malformed JSON (e.g. a `randomNumber` value outside Java `int` range) yields
+`HttpMessageNotReadableException` with no friendly body. Domain failures such as
+`InvalidRangeException` from `RandomNo` are caught and swallowed the same way.
 
 **Target state:**
 Create `StsExceptionHandler.java`:
@@ -536,6 +544,14 @@ public class StsExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidation(MethodArgumentNotValidException ex) { ... }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleMalformedJson(HttpMessageNotReadableException ex) { ... }
+
+    @ExceptionHandler(InvalidRangeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDomainRange(InvalidRangeException ex) { ... }
 
     @ExceptionHandler(UnsupportedTokenTypeException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -554,6 +570,10 @@ Remove the `try/catch` from the controller; let exceptions propagate to the advi
 Replace `e.printStackTrace()` with `log.error("Token generation failed", e)` using SLF4J
 (`LoggerFactory.getLogger(TokenController.class)`).
 
+`HttpMessageNotReadableException` handler should produce a user-facing message for common cases
+(e.g. "randomNumber must be an integer between 0 and 15" when the root cause is numeric
+overflow on that field).
+
 **Files to create:**
 - `StsExceptionHandler.java`
 - `ErrorResponse.java`
@@ -562,7 +582,9 @@ Replace `e.printStackTrace()` with `log.error("Token generation failed", e)` usi
 **Done when:**
 - `POST /token` with a valid request returns HTTP 200 `{"token": "..."}`.
 - `POST /token` with bad input returns HTTP 400 `{"error": "..."}`.
-- `POST /token` with a decoder key that triggers a crypto exception returns HTTP 500 `{"error": "..."}`.
+- `POST /token` with `randomNumber` out of int range returns HTTP 400 JSON (not whitelabel HTML).
+- `POST /token` with `randomNumber` 16+ returns HTTP 400 JSON.
+- `POST /token` with a decoder key that triggers an unexpected crypto exception returns HTTP 500 `{"error": "..."}`.
 - No response ever has a null or empty body.
 
 ---
@@ -616,7 +638,9 @@ Create `src/test/java/co/nxtgrid/` and add at minimum:
   cross-reference with the NectarAPI project's own test vectors if available).
 - `TokenControllerValidationTest.java` — uses `MockMvc` to assert HTTP 400 for each
   invalid input scenario (bad hex length, out-of-range random, unknown type, missing required
-  field).
+  field, numeric overflow on `randomNumber`).
+- `RootControllerTest.java` — asserts `GET /` returns HTTP 200 JSON with service name and
+  endpoint links.
 
 Example vector structure:
 ```java
@@ -628,15 +652,125 @@ assertThat(token).isEqualTo("12345678901234567890");
 **Files to create:**
 - `src/test/java/co/nxtgrid/TokenStrategyIntegrationTest.java`
 - `src/test/java/co/nxtgrid/TokenControllerValidationTest.java`
+- `src/test/java/co/nxtgrid/RootControllerTest.java`
 
 **Done when:** `mvn test` passes. At least four token-vector tests (one per type) and at least
-five validation rejection tests are green.
+five validation rejection tests are green. `RootControllerTest` passes.
+
+---
+
+### Task 2.7 — Add OpenAPI / Swagger UI documentation
+- [ ] **Status:** Not started
+- **Depends on:** 2.3, 2.4
+
+**Current state:**
+No OpenAPI dependency or annotations. Integrators must read `README.md` or Java source to
+learn request field constraints. The `randomNumber` field (STS 4-bit RND, range 0–15) is
+especially easy to misuse.
+
+**Target state:**
+Add to `pom.xml` (version managed by Spring Boot parent where possible, or pin explicitly):
+```xml
+<dependency>
+    <groupId>org.springdoc</groupId>
+    <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    <version>2.8.5</version>
+</dependency>
+```
+
+Annotate wrapper-layer DTOs with `io.swagger.v3.oas.annotations.media.Schema`. The field name
+**stays `randomNumber`** — do not rename. Example for that field:
+
+```java
+@Schema(
+    description = "STS RND field (4 bits). Must be an integer from 0 to 15. "
+        + "Vary between token issues to avoid duplicate-token rejection on the meter. "
+        + "This is not a meter serial number or other large identifier.",
+    minimum = "0",
+    maximum = "15",
+    example = "3"
+)
+@Min(0) @Max(15)
+private int randomNumber;
+```
+
+Apply `@Schema` to all `TokenRequest` fields, `TokenResponse`, and `ErrorResponse`. Add an
+`@Operation` summary on `TokenController.generateToken()`.
+
+Optional `OpenApiConfig.java` bean to set API title (`NXT STS`), version (from `pom.xml` /
+`spring.application.name`), and description.
+
+Expose (springdoc defaults):
+- `GET /swagger-ui.html` — interactive Swagger UI
+- `GET /v3/api-docs` — OpenAPI 3 JSON
+
+**Files to create/modify:**
+- `pom.xml` — add springdoc dependency
+- `TokenRequest.java`, `TokenResponse.java`, `ErrorResponse.java` — `@Schema` annotations
+- `TokenController.java` — `@Operation` / `@ApiResponse` annotations
+- `OpenApiConfig.java` — optional API metadata bean
+
+**Done when:**
+- `GET /swagger-ui.html` loads and documents `POST /token` with all fields.
+- `randomNumber` shows `minimum: 0`, `maximum: 15`, and the STS RND description in Swagger UI.
+- `GET /v3/api-docs` returns valid OpenAPI JSON including the same constraints.
+
+---
+
+### Task 2.8 — Add JSON root route (`GET /`)
+- [ ] **Status:** Not started
+- **Depends on:** 2.1
+
+**Current state:**
+`GET /` returns Spring Boot's whitelabel HTML error page (404). There is no service discovery
+endpoint for operators visiting the base URL.
+
+**Target state:**
+Create `RootController.java`:
+```java
+@RestController
+public class RootController {
+
+    @GetMapping("/")
+    public ServiceInfo index() { ... }
+}
+```
+
+`ServiceInfo` is a simple JSON DTO (wrapper layer):
+```json
+{
+  "name": "nxt-sts",
+  "version": "1.0.0",
+  "description": "IEC 62055-41 STS prepayment token generation service",
+  "endpoints": {
+    "token": "POST /token",
+    "health": "GET /actuator/health",
+    "openapi": "GET /v3/api-docs",
+    "swaggerUi": "GET /swagger-ui.html"
+  }
+}
+```
+
+Read `version` from `@Value("${project.version:unknown}")` or `build-info` / `pom` property
+injected via `application.properties` (`info.app.version=${project.version}`) — pick one
+approach and document it in the README.
+
+**Files to create:**
+- `RootController.java`
+- `ServiceInfo.java` (or inline `Map` if preferred — a typed DTO is clearer for OpenAPI)
+
+**Done when:**
+- `GET /` returns HTTP 200 JSON (not HTML).
+- Response includes links to `/token`, `/actuator/health`, `/v3/api-docs`, and `/swagger-ui.html`.
+- `RootControllerTest` (Task 2.6) passes.
 
 ---
 
 ### Phase 2 checkpoint
 
 - `mvn verify` (build + test) passes from a clean checkout.
+- `curl http://localhost:8080/` returns JSON service index (not whitelabel HTML).
+- `curl http://localhost:8080/swagger-ui.html` loads Swagger UI.
 - `curl -X POST http://localhost:8080/token -H "Content-Type: application/json" -d '{"type":"TOP_UP","issueDate":"2024-03-15T10:30:00","randomNumber":3,"decoderKey":"1234567890ABCDEF","kwh":50.0}'` returns HTTP 200 with a 20-digit token.
 - Every known error path returns a structured JSON error with the correct HTTP status code.
 - No null or empty response body is possible from any code path.
@@ -747,10 +881,17 @@ Add to `pom.xml`:
 Create `src/main/resources/application.properties`:
 ```properties
 server.port=8080
+server.error.whitelabel.enabled=false
 management.endpoints.web.exposure.include=health,info
 management.endpoint.health.show-details=never
 spring.application.name=nxt-sts
+springdoc.swagger-ui.path=/swagger-ui.html
+springdoc.api-docs.path=/v3/api-docs
 ```
+
+`server.error.whitelabel.enabled=false` ensures unknown routes return JSON error responses
+(via `@RestControllerAdvice` or Spring's default JSON error handler) instead of HTML whitelabel
+pages. Verified in Task 2.4 / Phase 2 checkpoint.
 
 **Done when:** `GET /actuator/health` returns `{"status":"UP"}`.
 
@@ -816,7 +957,7 @@ Pushing a `v1.0.0` tag triggers the release workflow and publishes the image to 
 
 ### Task 3.5 — Update README and CONTRIBUTING for the new structure
 - [ ] **Status:** Not started
-- **Depends on:** 3.1, 3.2, 3.3, 3.4, 2.2
+- **Depends on:** 3.1, 3.2, 3.3, 3.4, 2.2, 2.7, 2.8
 
 **Current state:**
 The README is reasonably written but has several gaps now that the structure has changed:
@@ -825,6 +966,7 @@ The README is reasonably written but has several gaps now that the structure has
 - There is no environment variable reference table.
 - There is no "how to add a token type" section.
 - `CONTRIBUTING.md` describes the process but not the technical steps for adding a token type.
+- No mention of Swagger UI, the JSON root route, or detailed `randomNumber` field guidance.
 
 **Target state:**
 Update `README.md`:
@@ -836,6 +978,16 @@ Update `README.md`:
 4. Add a **CI / Container image** section describing the GitHub Actions pipeline and GHCR image.
 5. Add a **Supported token types** section that matches the current four types plus a short
    note on how to add a new one (link to `CONTRIBUTING.md`).
+6. Add an **API documentation** section:
+   - `GET /` — JSON service index
+   - `GET /swagger-ui.html` — interactive OpenAPI docs (preferred reference for integrators)
+   - `GET /v3/api-docs` — OpenAPI JSON
+   - `GET /actuator/health` — health check
+7. Expand the **`randomNumber`** field documentation in the API Reference table:
+   - STS 4-bit RND field; **must be 0–15** (protocol constraint, not an arbitrary API limit)
+   - Not a meter serial number or large identifier
+   - Vary between token issues to avoid duplicate-token rejection on the meter
+   - Link to Swagger UI for the full schema
 
 Update `CONTRIBUTING.md`:
 Add a **"Adding a token type"** section:
@@ -849,6 +1001,7 @@ Add a **"Adding a token type"** section:
 
 **Done when:** `README.md` quick-start works end-to-end on a fresh clone without any
 context from this document. `CONTRIBUTING.md` explains how to add a token type concretely.
+README links to Swagger UI and documents `randomNumber` constraints clearly.
 
 ---
 

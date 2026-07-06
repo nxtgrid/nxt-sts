@@ -30,6 +30,9 @@ contributed to by external parties, for three reasons:
    hardcodes an internal `requestID = "asda"`, and contains no input validation despite having
    `spring-boot-starter-validation` on the classpath. Adding a new token type requires editing
    an `if/else` chain and knowing the exact constructor signature of the target generator class.
+   There is no root-route handler (`GET /` returns a Spring whitelabel error page), no OpenAPI
+   documentation, and no structured JSON error for malformed request bodies (e.g. an out-of-range
+   `randomNumber`).
 
 3. **No deployment scaffolding.** The Dockerfile is single-stage, copies a pre-built JAR (not
    built inside the container), has no image tag pin, and runs as root. There is no CI pipeline,
@@ -83,6 +86,8 @@ but is explicitly out of scope for this preparation effort.
 - `TokenController` — the `@RestController` handling `POST /token`, with `@PostMapping`,
   proper `@Valid` input validation, and `@RestControllerAdvice` error handling that maps
   exceptions to structured JSON error responses with correct HTTP status codes.
+- `RootController` — a `@RestController` handling `GET /` that returns a JSON service index
+  (name, version, links to `/token`, `/actuator/health`, and the OpenAPI/Swagger UI paths).
 - `TokenStrategy` — an interface (`supports(type: String): Boolean` + `generate(request):
   Token`) implemented by one class per token type. Spring collects all implementations and
   the controller dispatches to the matching strategy. Adding a new token type requires adding
@@ -111,8 +116,10 @@ The Maven wrapper (`mvnw` / `.mvn/`) is added so contributors do not need a loca
 installation.
 
 A minimal `src/main/resources/application.properties` is committed with safe defaults
-(`server.port=8080`, `logging.level.root=INFO`). A `Spring Boot Actuator` dependency is added
-to expose `/actuator/health` for container orchestration readiness checks.
+(`server.port=8080`, `logging.level.root=INFO`, `server.error.whitelabel.enabled=false`).
+A `Spring Boot Actuator` dependency is added to expose `/actuator/health` for container
+orchestration readiness checks. OpenAPI/Swagger UI paths are configured via springdoc defaults
+(see decision 8).
 
 ### 6. CI via GitHub Actions; no CD in scope
 
@@ -128,7 +135,7 @@ Extracting the STA/EA07 cryptographic engine into a standalone `sts-core` Maven 
 Spring, published to Maven Central) is the planned next effort after this preparation, enabling
 the Java implementation to be embedded in other JVM services without an HTTP call. To ensure
 that extraction remains a mechanical packaging exercise and not a redesign, **all work done
-in decisions 1–6 must respect the following boundary:**
+in decisions 1–8 must respect the following boundary:**
 
 - **No Spring imports in `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.** These packages form
   the future `sts-core` and must compile without Spring on the classpath. If any file in these
@@ -139,9 +146,9 @@ in decisions 1–6 must respect the following boundary:**
   `token/`. They bridge an HTTP request to a domain call; that translation is the wrapper's
   responsibility. They may carry `@Component` as a Spring marker but must contain no other
   framework dependencies — removing `@Component` must leave them as compilable pure-Java classes.
-- **HTTP and web concepts stay in the wrapper layer.** `TokenController`, request/response DTOs,
-  validation annotations, and exception handlers live in `co.nxtgrid` (top-level package), not
-  inside `token/` or `ca/`.
+- **HTTP and web concepts stay in the wrapper layer.** `TokenController`, `RootController`,
+  request/response DTOs, OpenAPI `@Schema` annotations, validation annotations, and exception
+  handlers live in `co.nxtgrid` (top-level package), not inside `token/` or `ca/`.
 - **Domain objects (`token/domain/*`) remain plain Java value objects.** No JPA, no Jackson
   annotations, no framework dependencies of any kind.
 
@@ -154,6 +161,30 @@ vectors) is deferred to Phase 4 in the execution plan.
 Multi-language ports (TypeScript/npm, PHP/Composer, Python/PyPI) are feasible because the STA
 algorithm is deterministic and can be validated against shared test vectors; they are deferred
 to Phase 5 and depend on Phase 4.3 (conformance test vectors).
+
+### 8. API discoverability: OpenAPI, root route, and field documentation
+
+External integrators must be able to discover and understand the HTTP API without reading Java
+source. Three deliverables address this:
+
+**OpenAPI / Swagger UI** — add `springdoc-openapi-starter-webmvc-ui` (Spring Boot 3 standard).
+Expose interactive docs at `/swagger-ui.html` and the machine-readable spec at `/v3/api-docs`.
+Annotate wrapper-layer DTOs (`TokenRequest`, `TokenResponse`, `ErrorResponse`) with OpenAPI
+`@Schema` metadata. The request field remains named **`randomNumber`** (no rename); its schema
+must document that it is the STS 4-bit RND field, **required range 0–15**, with an example
+value and a note to vary it between token issues to avoid duplicates.
+
+**Root route** — `GET /` returns JSON (not an HTML whitelabel page) listing the service name,
+version, and endpoint paths. This is the human-friendly entry point when visiting the base URL.
+
+**Structured errors everywhere** — extend `@RestControllerAdvice` to handle JSON parse failures
+(`HttpMessageNotReadableException`, e.g. numeric overflow on `randomNumber`) and domain
+validation failures (`InvalidRangeException` from the crypto path) as HTTP 400 with a clear
+JSON body. Disable Spring's whitelabel HTML error pages
+(`server.error.whitelabel.enabled=false`) so unknown routes also return JSON errors.
+
+The README API reference must cross-link to Swagger UI and expand the `randomNumber` field
+description beyond a single table row.
 
 ---
 
@@ -173,6 +204,8 @@ to Phase 5 and depend on Phase 4.3 (conformance test vectors).
 - The `sts-core` boundary is enforced from the start: `co.nxtgrid.token.*` and
   `co.nxtgrid.ca.*` carry no Spring imports after this effort, meaning Phase 4 (library
   extraction) is a Maven packaging task, not a code redesign.
+- OpenAPI docs and a JSON root route make the service self-describing for operators and
+  integrators without prior STS domain knowledge.
 
 ### Negative / Risks
 
