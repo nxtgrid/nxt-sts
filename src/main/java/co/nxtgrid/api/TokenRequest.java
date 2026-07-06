@@ -2,6 +2,7 @@ package co.nxtgrid.api;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.validation.constraints.AssertTrue;
@@ -19,12 +20,14 @@ public class TokenRequest {
     @NotNull
     private TokenType type;
 
-    @NotNull
+    @NotNull(message = "issueDate is required")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime issueDate;
 
+    @NotNull(message = "randomNumber is required")
     @Min(value = 0, message = "randomNumber must be an integer between 0 and 15")
     @Max(value = 15, message = "randomNumber must be an integer between 0 and 15")
-    private int randomNumber;
+    private Integer randomNumber;
 
     private Double kwh;
     private Long powerLimit;
@@ -57,11 +60,11 @@ public class TokenRequest {
         this.issueDate = issueDate;
     }
 
-    public int getRandomNumber() {
+    public Integer getRandomNumber() {
         return randomNumber;
     }
 
-    public void setRandomNumber(int randomNumber) {
+    public void setRandomNumber(Integer randomNumber) {
         this.randomNumber = randomNumber;
     }
 

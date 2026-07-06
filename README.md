@@ -75,13 +75,58 @@ The build produces `target/nxt-sts-1.0.0.jar`. The `target/` directory is git-ig
 
 ---
 
-## Running
+## Testing
+
+Run all tests:
 
 ```bash
+mvn test
+```
+
+Full build with tests (recommended before committing):
+
+```bash
+mvn verify
+```
+
+Run a single test class:
+
+```bash
+mvn test -Dtest=TokenStrategyIntegrationTest
+```
+
+Run a single test method:
+
+```bash
+mvn test -Dtest=TokenControllerValidationTest#rejectsMissingRandomNumber
+```
+
+Tests live under `src/test/java/co/nxtgrid/` and cover STS token vectors, input validation, and the root service index.
+
+---
+
+## Running
+
+During development:
+
+```bash
+mvn spring-boot:run
+```
+
+To run the packaged JAR (final check before deployment):
+
+```bash
+mvn clean package
 java -jar target/nxt-sts-1.0.0.jar
 ```
 
 The service starts on **port 8080** by default (Spring Boot embedded Tomcat). Override with:
+
+```bash
+mvn spring-boot:run -Dspring-boot.run.arguments=--server.port=8084
+```
+
+Or, when using the JAR:
 
 ```bash
 java -jar target/nxt-sts-1.0.0.jar --server.port=8084

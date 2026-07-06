@@ -51,7 +51,10 @@ nxt-sts/
     │   ├── TokenResponse.java
     │   ├── TokenType.java
     │   ├── ErrorResponse.java
-    │   └── StsExceptionHandler.java
+    │   ├── StsExceptionHandler.java
+    │   ├── UnsupportedTokenTypeException.java
+    │   ├── RootController.java
+    │   └── ServiceInfo.java
     ├── strategy/                  ← one TokenStrategy @Component per token type
     │   ├── TokenStrategy.java
     │   ├── TransferElectricityCreditStrategy.java
@@ -600,8 +603,15 @@ on it.
 ---
 
 ### Task 2.4 — Add `@RestControllerAdvice` error handling
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
+
+**Implementation notes:** Extended `StsExceptionHandler` with `InvalidRangeException` (400),
+`UnsupportedTokenTypeException` (400), and catch-all `Exception` (500 with SLF4J logging, no
+stack trace in response). `TokenController` try/catch removed; unknown strategy match throws
+`UnsupportedTokenTypeException`. Malformed JSON handler improved for `randomNumber` overflow.
+`ErrorResponse` was already present from Task 2.3. Manual curl verification: valid → 200 JSON;
+all bad-input cases → 400 JSON; no null/empty bodies.
 
 **Current state:**
 The `try/catch` in `MyApplication.home()` calls `e.printStackTrace()` and returns `null`,
@@ -698,8 +708,14 @@ the enum; `grep -r '"TOP_UP"' src/` returns zero results outside of tests.
 ---
 
 ### Task 2.6 — Add JUnit tests with known STS token vectors
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.2
+
+**Implementation notes:** Added `spring-boot-starter-test`. Three test classes with MockMvc:
+`TokenStrategyIntegrationTest` (4 token vectors recorded 2026-07-06 from live generators),
+`TokenControllerValidationTest` (8 rejection scenarios + valid request), `RootControllerTest`.
+`RootController` + `ServiceInfo` pulled forward from Task 2.8 so `RootControllerTest` can pass.
+`mvn verify` green (13 tests).
 
 **Current state:**
 `src/test/` does not exist. There are zero tests. This means any change to the crypto path
@@ -793,7 +809,7 @@ Expose (springdoc defaults):
 ---
 
 ### Task 2.8 — Add JSON root route (`GET /`)
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06, pulled forward into Task 2.6)
 - **Depends on:** 2.1
 
 **Current state:**
@@ -1143,6 +1159,13 @@ refactor — `requestID="asda"` and null-on-unknown/exception kept; 400/500 mapp
 requestID → after 2.6 vectors. Also noted: `co.nxtgrid.hsm.*` (19 files) is still on disk despite
 Task 1.2 being marked complete — track as a separate Phase 1 cleanup, out of scope for 2.2.
 
-2026-07-06 — [2.3] — Bean Validation on `TokenRequest`; `LocalDateTime` API layer; `TokenType`
-enum + strategy `supports(TokenType)`; `DateTimeConverter` deleted; minimal `StsExceptionHandler`
-for validation/malformed JSON (full error mapping → Task 2.4).
+2026-07-06 — [2.4] — Full error handling: controller try/catch removed; `UnsupportedTokenTypeException`;
+`InvalidRangeException` + catch-all `Exception` handlers; SLF4J logging on 500; improved overflow
+message for `randomNumber`.
+
+2026-07-06 — [2.4 follow-up] — `issueDate` format validation: `@JsonFormat` on `TokenRequest`;
+malformed/mistyped `issueDate` returns HTTP 400 with ISO 8601 example message (deferred OpenAPI
+docs remain Task 2.7).
+
+2026-07-06 — [2.6] — JUnit regression suite: 4 token vectors, 8 validation tests, root route test;
+`RootController`/`ServiceInfo` pulled forward from 2.8; `spring-boot-starter-test` added.

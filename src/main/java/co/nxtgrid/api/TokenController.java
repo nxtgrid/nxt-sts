@@ -22,20 +22,11 @@ public class TokenController {
     }
 
     @PostMapping
-    TokenResponse generateToken(@Valid @RequestBody TokenRequest body) {
-        try {
-            TokenStrategy strategy = strategies.stream()
-                .filter(s -> s.supports(body.getType()))
-                .findFirst()
-                .orElse(null);
-            if (strategy == null) {
-                return null;
-            }
-            return new TokenResponse(strategy.generate(body));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return null;
+    TokenResponse generateToken(@Valid @RequestBody TokenRequest body) throws Exception {
+        TokenStrategy strategy = strategies.stream()
+            .filter(s -> s.supports(body.getType()))
+            .findFirst()
+            .orElseThrow(() -> new UnsupportedTokenTypeException(body.getType()));
+        return new TokenResponse(strategy.generate(body));
     }
 }
