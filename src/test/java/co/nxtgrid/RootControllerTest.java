@@ -29,4 +29,18 @@ class RootControllerTest {
             .andExpect(jsonPath("$.endpoints.openapi").value("GET /v3/api-docs"))
             .andExpect(jsonPath("$.endpoints.swaggerUi").value("GET /swagger-ui.html"));
     }
+
+    @Test
+    void getOnToken_returnsMethodNotAllowed() throws Exception {
+        mockMvc.perform(get("/token"))
+            .andExpect(status().isMethodNotAllowed())
+            .andExpect(jsonPath("$.error").value("Method not allowed for this endpoint"));
+    }
+
+    @Test
+    void unknownRoute_returnsNotFound() throws Exception {
+        mockMvc.perform(get("/does-not-exist"))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.error").value("Not found"));
+    }
 }
