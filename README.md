@@ -156,6 +156,17 @@ docker run -p 8080:8080 \
   nxt-sts
 ```
 
+> **Health checks**
+>
+> The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds.
+> When running with plain Docker, you can disable it if your environment performs its own
+> checks: `docker run --no-healthcheck ...`
+>
+> **Note:** Some cloud platforms (e.g. DigitalOcean App Platform) use their own health-check
+> mechanism instead of the image `HEALTHCHECK`. Configure the platform to probe
+> `/actuator/health` (or use its default TCP check on port 8080) — the Dockerfile health
+> check is not used in those environments.
+
 ---
 
 ## CI / Container Image
