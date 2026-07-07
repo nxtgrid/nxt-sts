@@ -2,8 +2,8 @@ package co.nxtgrid.api;
 
 import java.time.LocalDateTime;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
@@ -29,13 +29,15 @@ public class TokenRequest {
     private TokenType type;
 
     @Schema(
-        description = "Token issue date/time in ISO 8601 format",
+        description = "Token issue date/time in ISO 8601 format. Optional fractional seconds and "
+            + "UTC/offset suffixes are accepted; any offset is ignored and the wall-clock date "
+            + "and time fields are passed to token generation unchanged.",
         example = "2024-03-15T10:30:00",
         type = "string",
         format = "date-time"
     )
     @NotNull(message = "issueDate is required")
-    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
+    @JsonDeserialize(using = IssueDateDeserializer.class)
     private LocalDateTime issueDate;
 
     @Schema(

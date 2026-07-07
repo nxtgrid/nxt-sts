@@ -201,7 +201,7 @@ Generates a prepayment token.
 | Field | Type | Required | Description |
 |---|---|---|---|
 | `type` | `string` | Yes | Token type: `TOP_UP`, `CLEAR_CREDIT`, `CLEAR_TAMPER`, `SET_POWER_LIMIT` |
-| `issueDate` | `string` | Yes | ISO 8601 datetime, e.g. `"2024-03-15T10:30:00"` |
+| `issueDate` | `string` | Yes | ISO 8601 datetime (see note below) |
 | `randomNumber` | `integer` | Yes | STS 4-bit RND field — **must be 0–15** (see note below) |
 | `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
 | `kwh` | `number` | For `TOP_UP` | Amount of electricity credit in kWh |
@@ -218,6 +218,13 @@ Generates a prepayment token.
 > replay attacks. A value of 0 is valid but should not be reused immediately.
 >
 > See the full schema in the [Swagger UI](http://localhost:8080/swagger).
+
+> **`issueDate` — wall-clock semantics**
+>
+> Accepts ISO 8601 forms such as `"2024-03-15T10:30:00"`, `"2026-07-07T10:12:54.289"`,
+> or `"2026-07-07T10:12:54.289Z"`. Optional fractional seconds and UTC/offset suffixes
+> are allowed. Any time-zone offset is **ignored**; the date and time fields are passed
+> to token generation unchanged.
 
 **Example — TOP_UP**
 

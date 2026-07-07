@@ -24,7 +24,8 @@ public class StsExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(StsExceptionHandler.class);
     private static final String ISSUE_DATE_FORMAT_MESSAGE =
-        "issueDate must be an ISO 8601 datetime, e.g. \"2024-03-15T10:30:00\"";
+        "issueDate must be an ISO 8601 datetime, e.g. \"2024-03-15T10:30:00\" or "
+            + "\"2026-07-07T10:12:54.289Z\" (time zone offset ignored)";
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

@@ -1215,3 +1215,7 @@ docs remain Task 2.7).
 
 2026-07-06 — [2.6] — JUnit regression suite: 4 token vectors, 8 validation tests, root route test;
 `RootController`/`ServiceInfo` pulled forward from 2.8; `spring-boot-starter-test` added.
+
+2026-07-07 — issueDate — Broadened ISO 8601 acceptance via `IssueDateDeserializer` (fractional
+seconds, UTC/offset suffixes). Offset is ignored; wall-clock date/time fields pass through to
+token generation unchanged. README, OpenAPI schema, and error message aligned.
