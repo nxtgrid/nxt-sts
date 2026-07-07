@@ -159,6 +159,94 @@ class TokenControllerValidationTest {
     }
 
     @Test
+    void acceptsZeroKwhForTopUp() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "TOP_UP",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "kwh": 0
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isString())
+            .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    void rejectsNegativeKwhForTopUp() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "TOP_UP",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "kwh": -0.5
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("kwh must be zero or greater"))
+            .andExpect(jsonPath("$.field").value("kwh"));
+    }
+
+    @Test
+    void acceptsZeroPowerLimitForSetPowerLimit() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "SET_POWER_LIMIT",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "powerLimit": 0
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isString())
+            .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    void rejectsNegativePowerLimitForSetPowerLimit() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "SET_POWER_LIMIT",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "powerLimit": -100
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("powerLimit must be zero or greater"))
+            .andExpect(jsonPath("$.field").value("powerLimit"));
+    }
+
+    @Test
     void rejectsMalformedIssueDate() throws Exception {
         mockMvc.perform(
             post("/token")

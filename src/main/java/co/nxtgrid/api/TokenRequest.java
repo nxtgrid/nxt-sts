@@ -11,6 +11,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.PositiveOrZero;
 
 @Schema(description = "Request to generate a 20-digit IEC 62055-41 STS prepayment token")
 public class TokenRequest {
@@ -54,15 +55,19 @@ public class TokenRequest {
     private Integer randomNumber;
 
     @Schema(
-        description = "Amount of electricity credit in kWh. Required when type is TOP_UP.",
-        example = "0.5"
+        description = "Amount of electricity credit in kWh. Required when type is TOP_UP. Must be zero or greater.",
+        example = "0.5",
+        minimum = "0"
     )
+    @PositiveOrZero(message = "kwh must be zero or greater")
     private Double kwh;
 
     @Schema(
-        description = "Maximum power limit value. Required when type is SET_POWER_LIMIT.",
-        example = "5000"
+        description = "Maximum power limit value. Required when type is SET_POWER_LIMIT. Must be zero or greater.",
+        example = "5000",
+        minimum = "0"
     )
+    @PositiveOrZero(message = "powerLimit must be zero or greater")
     private Long powerLimit;
 
     @AssertTrue(message = "kwh is required for TOP_UP")
