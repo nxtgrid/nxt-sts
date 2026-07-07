@@ -1,7 +1,7 @@
 package co.nxtgrid.strategy;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.temporal.ChronoField;
 
 import org.joda.time.DateTime;
 
@@ -11,6 +11,14 @@ final class StrategySupport {
     }
 
     static DateTime toJodaDateTime(LocalDateTime issueDate) {
-        return new DateTime(issueDate.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        return new DateTime(
+            issueDate.getYear(),
+            issueDate.getMonthValue(),
+            issueDate.getDayOfMonth(),
+            issueDate.getHour(),
+            issueDate.getMinute(),
+            issueDate.getSecond(),
+            issueDate.get(ChronoField.MILLI_OF_SECOND)
+        );
     }
 }
