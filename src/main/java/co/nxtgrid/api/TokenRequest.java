@@ -32,7 +32,7 @@ public class TokenRequest {
     @Schema(
         description = "Token issue date/time in ISO 8601 format. Optional fractional seconds and "
             + "UTC/offset suffixes are accepted; any offset is ignored and the wall-clock date "
-            + "and time fields are passed to token generation unchanged.",
+            + "and time fields are interpreted as UTC for token generation.",
         example = "2024-03-15T10:30:00",
         type = "string",
         format = "date-time"

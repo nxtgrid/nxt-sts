@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 final class StrategySupport {
 
@@ -18,7 +19,8 @@ final class StrategySupport {
             issueDate.getHour(),
             issueDate.getMinute(),
             issueDate.getSecond(),
-            issueDate.get(ChronoField.MILLI_OF_SECOND)
+            issueDate.get(ChronoField.MILLI_OF_SECOND),
+            DateTimeZone.UTC
         );
     }
 }

@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 /**
  * Accepts ISO 8601 local datetimes and offset/UTC forms. Any time-zone offset is ignored;
- * the wall-clock date and time fields are what token generation uses.
+ * the wall-clock date and time fields are interpreted as UTC for token generation.
  */
 public class IssueDateDeserializer extends JsonDeserializer<LocalDateTime> {
 
