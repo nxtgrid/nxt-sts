@@ -156,9 +156,18 @@ docker run -p 8080:8080 \
   nxt-sts
 ```
 
+When using a custom port, set `SERVER_PORT` and map the same host port:
+
+```bash
+docker run -p 9090:9090 \
+  -e SERVER_PORT=9090 \
+  nxt-sts
+```
+
 > **Health checks**
 >
-> The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds.
+> The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds
+> on the port given by `SERVER_PORT` (default 8080).
 > When running with plain Docker, you can disable it if your environment performs its own
 > checks: `docker run --no-healthcheck ...`
 >
