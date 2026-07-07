@@ -43,21 +43,19 @@ remaining items look.
 
 ---
 
-## Sources of truth (read before coding)
+## Finding documentation
 
-| Document | Purpose |
+Read `docs/index.md` first — it is a short map that tells you what each document contains and
+when to load it. **Do not read all docs upfront.** Load only the file(s) relevant to your
+current task.
+
+| Where | What you will find |
 |---|---|
-| `docs/plans/001-open-source-preparation.md` | **Execution plan** — tasks, dependencies, done criteria |
-| `docs/architecture/001-open-source-preparation.md` | **ADR** — architectural decisions and constraints |
+| `docs/plans/` | Engineering execution plans — tasks, status, done criteria, notes |
+| `docs/architecture/` | Architecture Decision Records — structural decisions and constraints |
+| `docs/capabilities.md` | Supported STS token types and how to add a new one |
 | `NOTICE` | Upstream attribution (NectarAPI); governs what may be deleted |
-| Source files on disk | Ground truth; the plan may drift — verify before acting |
-
-When executing the open-source preparation plan:
-
-- Work **one plan task at a time** (respect `Depends on`).
-- Read the task's "Current state" and the referenced source files before editing.
-- Mark the task `[x]` in the plan only after done criteria are met.
-- Note deviations under the task or in the plan's decisions log.
+| Source files on disk | Ground truth — docs may drift; always verify against the code |
 
 ---
 
@@ -82,14 +80,14 @@ Must return no results.
 
 - Token generation is **behavior-sensitive**. Same inputs must produce the same 20-digit token
   unless the task explicitly changes crypto logic.
-- Run `mvn verify` (or the task's stated check) before claiming done.
+- Run `./mvnw verify` before claiming done.
 - Do not change STS crypto output without test vectors or explicit human sign-off.
 
 ### Scope and style
 
 - **Minimize diff scope** — do not refactor, rename, or "improve" code outside the current task.
 - Match existing naming and package conventions (`co.nxtgrid`).
-- Prefer the patterns in the plan: `TokenStrategy`, `@RestControllerAdvice`, validation DTOs.
+- Prefer the patterns already in place: `TokenStrategy`, `@RestControllerAdvice`, validation DTOs.
 - Do not upgrade major dependencies (Spring Boot, BouncyCastle) unless the task requires it.
 
 ### Security
@@ -101,8 +99,8 @@ Must return no results.
 
 ## Definition of done (default)
 
-- [ ] Plan task done criteria met (or human-approved deviation documented)
-- [ ] `mvn verify` passes
+- [ ] Task done criteria met (or human-approved deviation documented)
+- [ ] `./mvnw verify` passes
 - [ ] `sts-core` boundary grep clean (if core packages were touched)
-- [ ] Plan file updated (`[x]` and notes if applicable)
+- [ ] Relevant plan file updated (task marked `[x]` with notes if applicable)
 - [ ] Human has reviewed — **wait for explicit go-ahead before the next task**

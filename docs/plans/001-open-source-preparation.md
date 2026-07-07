@@ -1071,7 +1071,7 @@ GHCR package visibility if needed.
 ---
 
 ### Task 3.5 — Update README and CONTRIBUTING for the new structure
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-07)
 - **Depends on:** 3.1, 3.2, 3.3, 3.4, 2.2, 2.7, 2.8
 
 **Current state:**
@@ -1118,6 +1118,13 @@ Add a **"Adding a token type"** section:
 context from this document. `CONTRIBUTING.md` explains how to add a token type concretely.
 README links to Swagger UI and documents `randomNumber` constraints clearly.
 
+**Notes:** Updated `README.md` for the current open-source-ready shape of the project:
+`./mvnw` commands, multi-stage Docker flow, configuration reference table, CI / GHCR section,
+API documentation endpoints, supported token types, and expanded `randomNumber` guidance.
+Updated `CONTRIBUTING.md` with `./mvnw` usage and a concrete "Adding a token type" section.
+Added `docs/index.md` plus agent/rule guidance so future agents load only relevant docs instead
+of pulling the entire docs tree into context up front.
+
 ---
 
 ### Phase 3 checkpoint
@@ -1136,6 +1143,21 @@ README links to Swagger UI and documents `randomNumber` constraints clearly.
 
 If the architectural invariant (see above) was respected throughout phases 1–3, Phase 4 is
 purely a Maven packaging and publishing exercise — no code logic needs to change.
+
+### Phase 4 handoff
+
+- **Status:** Intentionally deferred. Do not start Phase 4 just because it exists in the roadmap.
+- **Trigger to start:** A concrete `sts-core` consumer exists, such as another JVM service,
+  offline vending tool, batch job, or partner integration that needs in-process token generation.
+- **First docs to read:** `docs/index.md`, this Phase 4 section, and the relevant ADR in
+  `docs/architecture/` describing the `sts-core` boundary.
+- **Main invariant:** Keep the extraction mechanical, not architectural. The boundary established
+  in phases 1–3 means `co.nxtgrid.token.*` and `co.nxtgrid.ca.*` remain Spring-free, while HTTP,
+  validation, OpenAPI, and controller concerns stay in the wrapper layer.
+- **Do not change casually:** Token output behavior. If crypto behavior changes intentionally,
+  update the regression vectors and document the reason explicitly.
+- **Success condition:** Splitting into `sts-core` and `sts-service` feels like packaging and
+  release work, not a redesign of the STS engine.
 
 Work items:
 - **4.1 Split into multi-module Maven project:** create a `sts-core` module (no Spring,

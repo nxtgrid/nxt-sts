@@ -1,5 +1,5 @@
 ---
-description: NXT STS agent workflow, plan execution, and sts-core boundary
+description: NXT STS agent workflow, documentation navigation, and sts-core boundary
 alwaysApply: true
 ---
 
@@ -27,9 +27,9 @@ alwaysApply: true
 
 ## Before coding
 
-Read `AGENTS.md`, then the relevant task in `docs/plans/001-open-source-preparation.md` and `docs/architecture/001-open-source-preparation.md`. Source files are ground truth.
-
-Execute plan tasks **in order**; respect `Depends on`. Mark `[x]` only when done criteria are met.
+Read `AGENTS.md` for full instructions. Then read `docs/index.md` — it is a short map that
+tells you what each document contains and when to load it. Load only the doc(s) relevant to
+your task; do not read all docs upfront.
 
 ## Hard constraints
 
@@ -40,4 +40,4 @@ Execute plan tasks **in order**; respect `Depends on`. Mark `[x]` only when done
 
 ## Done
 
-`mvn verify` passes; boundary grep clean if core touched; human sign-off before next task.
+`./mvnw verify` passes; boundary grep clean if core touched; human sign-off before next task.
