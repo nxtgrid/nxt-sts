@@ -8,7 +8,7 @@ import co.nxtgrid.token.domain.base.BitString;
 import co.nxtgrid.token.domain.tokenclass.class0.CurrencyCreditTransferTokenClass;
 import co.nxtgrid.token.domain.tokensubclass.class0.ElectricityCurrencyCreditTransferTokenSubClass;
 import co.nxtgrid.token.exceptions.*;
-import co.nxtgrid.token.generators.tokensdecoder.error.*;
+import co.nxtgrid.token.exceptions.decode.*;
 import co.nxtgrid.token.miscellaneous.Strings;
 
 import java.util.Date;

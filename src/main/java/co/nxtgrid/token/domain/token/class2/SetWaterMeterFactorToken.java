@@ -10,7 +10,7 @@ import co.nxtgrid.token.exceptions.BitConcatOverflowError;
 import co.nxtgrid.token.exceptions.InvalidDateTimeBitsException;
 import co.nxtgrid.token.exceptions.InvalidRangeException;
 import co.nxtgrid.token.exceptions.InvalidWMFException;
-import co.nxtgrid.token.generators.tokensdecoder.error.CRCError;
+import co.nxtgrid.token.exceptions.decode.CRCError;
 
 import java.util.HashMap;
 import java.util.Optional;

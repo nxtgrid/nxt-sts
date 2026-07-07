@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** Not started
+**Status:** Phase 1 complete (Tasks 1.1–1.7); Phase 2 complete (Tasks 2.1–2.8); Phase 3 in progress
 
 ---
 
@@ -30,44 +30,51 @@ a `Depends on` note says otherwise.
 
 ## Current codebase snapshot
 
-> This section gives a cold agent enough context to orient before reading individual tasks.
+> **Current as of Phase 1 complete.** Dead packages from the original NectarAPI import
+> (`tokens/`, `hsm/`, `prism/`, `tokensdecoder/`, `ca/`) are deleted. Source on disk is
+> ground truth; individual task "Current state" sections below may still describe pre-change
+> layout for historical context.
 
 ### Repository layout (non-test, non-target)
 
 ```
 nxt-sts/
-├── pom.xml                        ← Maven build; artifact id: jambu (to be renamed)
-├── Dockerfile                     ← Single-stage; copies pre-built JAR; no tag pin
-├── README.md                      ← Reasonably complete; gaps noted in tasks
-├── LICENSE / NOTICE / AUTHORS.md / CONTRIBUTORS.md / CONTRIBUTING.md
+├── pom.xml                        ← artifact id: nxt-sts, version 1.0.0
+├── Dockerfile                     ← Single-stage; copies pre-built JAR (rewritten in Phase 3)
+├── docs/capabilities.md           ← Token type matrix (API vs library)
 └── src/main/java/co/nxtgrid/
-    ├── MyApplication.java         ← @SpringBootApplication + @RestController combined
-    ├── RequestData.java           ← Request DTO (no validation annotations)
-    ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component)
-    ├── token/                     ← STS domain model (derived from NectarAPI) — KEEP
-    │   ├── domain/                ← Value objects: Amount, DecoderKey, TokenIdentifier, etc.
-    │   ├── exceptions/            ← ~50 domain exception classes
-    │   └── generators/
-    │       ├── decoderkeygenerator/
-    │       ├── tokensdecoder/     ← Token decode path — NOT wired up; delete
-    │       └── tokensgenerator/
-    │           ├── nativetoken/   ← LIVE: the four active generators
-    │           └── prism/         ← Dead: HSM-backed generator path — delete
-    ├── ca/                        ← BouncyCastle cipher wrappers — partially dead; audit
-    ├── hsm/prism/                 ← Dead: Prism HSM client (Thrift) — delete entire package
-    └── tokens/                    ← Dead: NectarAPI service layer — delete entire package
-        ├── service/               ← TokensService interface + TokensServiceImpl (not @Service)
-        ├── utils/request/         ← RequestUtils (commented-out @Component; HTTP to NectarAPI)
-        ├── response/              ← ApiResponse DTO
-        ├── entity/                ← Token entity
-        └── constant/              ← StringConstants
+    ├── StsApplication.java        ← @SpringBootApplication bootstrap only
+    ├── DateTimeConverter.java     ← Joda-Time ISO 8601 converter (Spring @Component; deleted in 2.3)
+    ├── api/                       ← HTTP layer: controllers, request/response DTOs, errors
+    │   ├── TokenController.java
+    │   ├── TokenRequest.java      ← Bean Validation + LocalDateTime + TokenType
+    │   ├── TokenResponse.java
+    │   ├── TokenType.java
+    │   ├── ErrorResponse.java
+    │   ├── StsExceptionHandler.java
+    │   ├── UnsupportedTokenTypeException.java
+    │   ├── RootController.java
+    │   └── ServiceInfo.java
+    ├── strategy/                  ← one TokenStrategy @Component per token type
+    │   ├── TokenStrategy.java
+    │   ├── TransferElectricityCreditStrategy.java
+    │   ├── ClearCreditStrategy.java
+    │   ├── ClearTamperStrategy.java
+    │   └── SetMaximumPowerLimitStrategy.java
+    └── token/                     ← sts-core boundary: co.nxtgrid.token.*
+                                   ←   DecoderKey.fromHex(String) added here (Task 2.2)
+        ├── domain/
+        ├── exceptions/            ← domain exceptions; decode/ subpackage (from tokensdecoder)
+        └── generators/
+            ├── decoderkeygenerator/
+            └── tokensgenerator/nativetoken/   ← LIVE: the four active generators
 ```
 
-### The live request path (everything outside this is dead)
+### The live request path
 
 ```
 POST /token
-    └── MyApplication.home(RequestData body)
+    └── StsApplication.home(RequestData body)
             ├── Constructs TokenIdentifier, RandomNo, Amount, DecoderKey, KeyExpiryNumber
             ├── Dispatches on body.getType() with if/else:
             │       "TOP_UP"          → TransferElectricityCreditTokenGenerator
@@ -83,18 +90,13 @@ All four generators live under:
 
 ### Active Maven dependencies
 
-| Dependency | Used by live path? | Action |
+| Dependency | Used by live path? | Notes |
 |---|---|---|
-| `spring-boot-starter-web` | Yes | Keep |
-| `spring-boot-starter-validation` | Yes (unused — add `@Valid`) | Keep |
+| `spring-boot-starter-web` | Yes | HTTP server |
+| `spring-boot-starter-validation` | Yes (unused — add `@Valid` in Phase 2) | Keep |
 | `bcprov-jdk15on:1.70` | Yes (STA crypto) | Keep; plan upgrade to `bcprov-jdk18on` |
 | `joda-time:2.13` | Yes (`DateTimeConverter`, generators) | Keep for now |
-| `gson:2.11` | Dead (`tokens/utils/`) | Delete with package |
-| `libthrift:0.18.1` | Dead (`hsm/prism/`) | Delete with package |
-| `jedis:5.2` | Dead (`tokens/utils/`) | Delete with package |
-| `json:20240303` | Dead (`tokens/utils/`) | Delete with package |
-| `jakarta.xml.bind-api:4.0.2` | Dead (`tokens/utils/`) | Delete with package |
-| `junit-jupiter-api:5.11` | Test | Keep; add test classes |
+| `junit-jupiter-api:5.11` | Test | Keep; add test classes in Phase 2 |
 
 ---
 
@@ -138,13 +140,14 @@ from the start of this effort.
 
 | Layer | Packages | Allowed dependencies |
 |---|---|---|
-| **Core** (future `sts-core`) | `co.nxtgrid.token.*`, `co.nxtgrid.ca.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
-| **Wrapper** (future `sts-service`) | `co.nxtgrid` top-level (controllers, DTOs, strategies, OpenAPI config) | Spring Boot freely; depends on core packages |
+| **Core** (future `sts-core`) | `co.nxtgrid.token.*` | Plain Java, BouncyCastle, Joda-Time — nothing else |
+| **Wrapper** (future `sts-service`) | `co.nxtgrid.api.*`, `co.nxtgrid.strategy.*`, `StsApplication` | Spring Boot freely; depends on core packages |
 
 ### Concrete rules every task must follow
 
-1. **Never add a Spring import to any file under `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.**
+1. **Never add a Spring import to any file under `co.nxtgrid.token.*`.**
    These packages must compile without Spring on the classpath. They are the future `sts-core`.
+   (`co.nxtgrid.ca.*` was audited and fully removed in Task 1.4.)
 
 2. **`TokenStrategy` implementations live in `co.nxtgrid.strategy.*` (wrapper layer), not in
    `token/`.** They translate an HTTP request into a domain call; that translation belongs in
@@ -160,16 +163,15 @@ from the start of this effort.
 
 5. **`DateTimeConverter.java` is the only current Spring file in a near-core location; it is
    deleted in Task 2.3.** Until then, do not create any other Spring-annotated file inside
-   `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+   `co.nxtgrid.token.*`.
 
 ### Verification (run after any task that touches these packages)
 
 ```bash
 grep -r "import org.springframework" src/main/java/co/nxtgrid/token/
-grep -r "import org.springframework" src/main/java/co/nxtgrid/ca/
 ```
 
-Both commands must return no results when the task is marked done.
+Must return no results when the task is marked done.
 
 ---
 
@@ -182,7 +184,12 @@ Both commands must return no results when the task is marked done.
 ---
 
 ### Task 1.1 — Delete `co.nxtgrid.tokens` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** Two exception classes referenced from the live `token/` path and from
+packages deleted in later tasks were relocated to `co.nxtgrid.token.exceptions` before
+deletion: `InvalidIndividualAccountIdentificationNumber`, `InvalidTokenNoException`.
+Unused import of `DecoderKeyGeneratorManager` removed from `nativetoken/TokenGenerator.java`.
 - **Depends on:** nothing
 
 **Current state:**
@@ -209,7 +216,13 @@ Files under this path include:
 ---
 
 ### Task 1.2 — Delete `co.nxtgrid.hsm` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** The `tokensgenerator/prism/` tree was deleted in the same pass — every prism
+generator imports `hsm.prism` and the project cannot compile with one removed and the other
+remaining. `Meter.decodePrism()` and its HSM connection fields were removed from
+`tokensdecoder/Meter.java` (native decode path retained). Task 1.3 prism portion is therefore
+already done; 1.3 now only covers `tokensdecoder/`.
 - **Depends on:** 1.1 (decoder manager in `tokens/` references `hsm/`)
 
 **Current state:**
@@ -225,7 +238,13 @@ Files under this path include:
 ---
 
 ### Task 1.3 — Delete the `prism` generator tree and `tokensdecoder` packages
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Deviation:** Fourteen STS decode error types (`CRCError`, `DDTKError`, etc.) were relocated to
+`co.nxtgrid.token.exceptions.decode` — they are referenced by `decode()` methods on domain
+`Token` subclasses and `Token.checkCrc()`, not by the deleted decoder orchestration layer.
+Unused `Decoder` import removed from `StandardTransferAlgorithmEncryptionAlgorithm`. Prism tree
+was already removed in Task 1.2.
 - **Depends on:** 1.1, 1.2
 
 **Current state:**
@@ -246,7 +265,14 @@ no results. Build succeeds.
 ---
 
 ### Task 1.4 — Audit and prune `co.nxtgrid.ca` package
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+**Audit result:** `grep -r "import co.nxtgrid.ca" src/` after Tasks 1.1–1.3 returned no matches
+outside the package itself. The live `nativetoken` path uses STA/DEA crypto in
+`co.nxtgrid.token.domain.encryptionalgorithm.*` (javax.crypto directly), not the `ca` wrappers.
+All 10 files were deleted: `Provider`, `Metadata`, `GeneralCipher`, `Encode`, four symmetric
+ciphers (`AES128Cipher`, `DESCipher`, `DesedeCipher`, `SymmetricCipher`), and
+`FixedRandom` / `HexByteUtils`.
 - **Depends on:** 1.1, 1.2, 1.3
 
 **Current state:**
@@ -265,7 +291,12 @@ Build succeeds.
 ---
 
 ### Task 1.5 — Remove orphaned Maven dependencies
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+Removed from `pom.xml`: Gson 2.11, Thrift 0.18.1, Jedis 5.2, `org.json` 20240303,
+`jakarta.xml.bind-api` 4.0.2. `mvn clean install -DskipTests` succeeds.
+`mvn dependency:analyze` flags only expected Spring Boot starter noise and
+`junit-jupiter-api` (no test sources yet); none of the five removed artifacts remain.
 - **Depends on:** 1.1, 1.2, 1.3, 1.4
 
 **Current state:**
@@ -289,7 +320,10 @@ obvious orphans will be flagged).
 ---
 
 ### Task 1.6 — Rename artifact and main class
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+Renamed `jambu` → `nxt-sts`, version `1.0-SNAPSHOT` → `1.0.0`, `MyApplication` →
+`StsApplication`. Updated `pom.xml`, `Dockerfile`, and README JAR/docker references.
 - **Depends on:** nothing (can run in parallel with 1.1–1.5)
 
 **Current state:**
@@ -313,7 +347,11 @@ obvious orphans will be flagged).
 ---
 
 ### Task 1.7 — Fix `.gitignore`; remove tracked `.DS_Store`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
+
+`.DS_Store` was already untracked (removed in a prior commit); `git check-ignore -v .DS_Store`
+confirms the rule. Replaced `.gitignore`: `target/*` + `!target/jambu-…jar` exception →
+`target/`; added `.vscode/`, `.idea/`, `*.iml`. No `git rm --cached` required.
 - **Depends on:** nothing
 
 **Current state:**
@@ -358,7 +396,7 @@ self-describing via OpenAPI/Swagger UI and a JSON root route.
 ---
 
 ### Task 2.1 — Extract `StsApplication` bootstrap and create `TokenController`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 1.6 (rename must be complete first)
 
 **Current state:**
@@ -402,11 +440,43 @@ utility method in a new `StsUtils.java` file (or inline it where used).
 **Done when:** `POST /token` behaves identically to before. `StsApplication` has no
 `@RestController` annotation.
 
+**Implementation notes:** Introduced wrapper-layer `co.nxtgrid.api.TokenController`,
+`TokenRequest`, `TokenResponse`, and package-private `StsUtils`. Request semantics are
+intentionally unchanged in this task; Bean Validation, enum dispatch, and error mapping remain
+deferred to Tasks 2.2–2.4.
+
+**Deviation (post-review):** HTTP-facing types moved from `co.nxtgrid` top-level into
+`co.nxtgrid.api.*` for clearer wrapper-layer organisation. `StsUtils` placement is provisional
+— see architecture review checkpoint below.
+
 ---
 
 ### Task 2.2 — Introduce `TokenStrategy` interface and move dispatch logic
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
+
+**Implementation notes:** Created `co.nxtgrid.strategy` with `TokenStrategy` (`supports(String)` +
+`generate(TokenRequest)`) and four `@Component` implementations
+(`TransferElectricityCreditStrategy`, `ClearCreditStrategy`, `ClearTamperStrategy`,
+`SetMaximumPowerLimitStrategy`), each holding exactly its former `if/else` branch with named
+constants. `TokenController` now injects `List<TokenStrategy>` and dispatches. The hex/reverse
+logic moved to core `DecoderKey.fromHex(String)` and `co.nxtgrid.api.StsUtils` was deleted (see
+resolved checkpoint above). Behavior preserved: unknown type / exception still return null (HTTP
+200 empty body) — 400/500 mapping is Task 2.4. `mvn verify` passes; core Spring-import grep clean.
+
+**Architecture review checkpoint — RESOLVED (2026-07-06):**
+
+- `convertHexStringToReversedByteArray()` → moved to **core** as a plain-Java static factory
+  `DecoderKey.fromHex(String)` (`co.nxtgrid.token.domain.keys.decoder`). The reversed byte order
+  is STS key-loading semantics, not an HTTP concern, and every future `sts-core` caller needs it.
+  `co.nxtgrid.api.StsUtils` is deleted. No Spring imports added to core (boundary preserved).
+- Wrapper helpers use **named packages** (`api`, `strategy`); no generic `utils` package.
+- `ErrorResponse`, `RootController`, and OpenAPI config follow the `co.nxtgrid.api` convention.
+- **Enum timing:** `TokenStrategy.supports(String)` in 2.2; the `TokenType` enum swap stays in
+  Task 2.5 (smallest reviewable slice; 2.2 remains a behavior-preserving refactor).
+- **Behavior in 2.2:** `requestID = "asda"` and the null-on-unknown-type / null-on-exception
+  responses are preserved unchanged. HTTP 400/500 mapping is deferred to Task 2.4; the ADR's
+  UUID `requestID` swap is deferred until test vectors exist (Task 2.6).
 
 **Current state:**
 The four token types are dispatched via `if/else` in `MyApplication.home()`. Each branch
@@ -457,7 +527,7 @@ TokenStrategy strategy = strategies.stream()
 > **`sts-core` boundary check:** all five files above live in `co.nxtgrid.strategy.*` (wrapper
 > layer). They may import from `co.nxtgrid.token.*` freely but must not import
 > `org.springframework.*` beyond `@Component`. Run the invariant verification grep after this
-> task to confirm no Spring imports crept into `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.
+> task to confirm no Spring imports crept into `co.nxtgrid.token.*`.
 
 **Done when:** all four token types produce the same tokens as before (verified by test vectors
 added in Task 2.5). Unknown type strings return HTTP 400, not HTTP 200 with null body.
@@ -466,8 +536,16 @@ added in Task 2.5). Unknown type strings return HTTP 400, not HTTP 200 with null
 ---
 
 ### Task 2.3 — Add input validation to `TokenRequest`
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
+
+**Implementation notes:** `TokenRequest` now uses Bean Validation (`@NotNull`, `@Pattern`, `@Min`/`@Max`,
+`@AssertTrue` for conditional `kwh`/`powerLimit`). `@Valid` added on `TokenController`. API layer
+uses `java.time.LocalDateTime` (Jackson native); strategies convert to Joda via `StrategySupport`.
+`DateTimeConverter.java` deleted. `TokenType` enum added in `co.nxtgrid.api` (pulled forward from
+Task 2.5); strategies updated to `supports(TokenType)`. Minimal `StsExceptionHandler` +
+`ErrorResponse` added for validation and malformed-JSON cases (full domain/500 handling remains
+Task 2.4). Manual curl verification on port 8081: all four done-criteria cases return HTTP 400 JSON.
 
 **Current state:**
 `RequestData.java` has no validation annotations. `spring-boot-starter-validation` is already
@@ -525,8 +603,15 @@ on it.
 ---
 
 ### Task 2.4 — Add `@RestControllerAdvice` error handling
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.1
+
+**Implementation notes:** Extended `StsExceptionHandler` with `InvalidRangeException` (400),
+`UnsupportedTokenTypeException` (400), and catch-all `Exception` (500 with SLF4J logging, no
+stack trace in response). `TokenController` try/catch removed; unknown strategy match throws
+`UnsupportedTokenTypeException`. Malformed JSON handler improved for `randomNumber` overflow.
+`ErrorResponse` was already present from Task 2.3. Manual curl verification: valid → 200 JSON;
+all bad-input cases → 400 JSON; no null/empty bodies.
 
 **Current state:**
 The `try/catch` in `MyApplication.home()` calls `e.printStackTrace()` and returns `null`,
@@ -590,7 +675,7 @@ overflow on that field).
 ---
 
 ### Task 2.5 — Add `TokenType` enum
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06, pulled forward into Task 2.3)
 - **Depends on:** nothing (can run in parallel)
 
 **Current state:**
@@ -623,8 +708,14 @@ the enum; `grep -r '"TOP_UP"' src/` returns zero results outside of tests.
 ---
 
 ### Task 2.6 — Add JUnit tests with known STS token vectors
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.2
+
+**Implementation notes:** Added `spring-boot-starter-test`. Three test classes with MockMvc:
+`TokenStrategyIntegrationTest` (4 token vectors recorded 2026-07-06 from live generators),
+`TokenControllerValidationTest` (8 rejection scenarios + valid request), `RootControllerTest`.
+`RootController` + `ServiceInfo` pulled forward from Task 2.8 so `RootControllerTest` can pass.
+`mvn verify` green (13 tests).
 
 **Current state:**
 `src/test/` does not exist. There are zero tests. This means any change to the crypto path
@@ -645,7 +736,7 @@ Create `src/test/java/co/nxtgrid/` and add at minimum:
 Example vector structure:
 ```java
 // Vector sourced from current production service output, 2026-07-02
-// decoderKey: 1234567890ABCDEF | issueDate: 2024-03-15T10:30:00 | rnd: 3 | kwh: 50.0
+// decoderKey: 1234567890ABCDEF | issueDate: 2024-03-15T10:30:00 | rnd: 3 | kwh: 0.5
 assertThat(token).isEqualTo("12345678901234567890");
 ```
 
@@ -660,8 +751,14 @@ five validation rejection tests are green. `RootControllerTest` passes.
 ---
 
 ### Task 2.7 — Add OpenAPI / Swagger UI documentation
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06)
 - **Depends on:** 2.3, 2.4
+
+**Implementation notes:** Added `springdoc-openapi-starter-webmvc-ui` 2.8.5, `OpenApiConfig`,
+`@Schema` on `TokenRequest`/`TokenResponse`/`ErrorResponse` (including STS RND docs on
+`randomNumber`), `@Operation`/`@ApiResponses` on `TokenController`. Swagger UI served at
+`/swagger` (`springdoc.swagger-ui.path`). `OpenApiDocumentationTest` asserts `/v3/api-docs`
+and `/swagger`. `mvn verify` green (17 tests).
 
 **Current state:**
 No OpenAPI dependency or annotations. Integrators must read `README.md` or Java source to
@@ -718,7 +815,7 @@ Expose (springdoc defaults):
 ---
 
 ### Task 2.8 — Add JSON root route (`GET /`)
-- [ ] **Status:** Not started
+- [x] **Status:** Complete (2026-07-06, pulled forward into Task 2.6)
 - **Depends on:** 2.1
 
 **Current state:**
@@ -771,7 +868,7 @@ approach and document it in the README.
 - `mvn verify` (build + test) passes from a clean checkout.
 - `curl http://localhost:8080/` returns JSON service index (not whitelabel HTML).
 - `curl http://localhost:8080/swagger-ui.html` loads Swagger UI.
-- `curl -X POST http://localhost:8080/token -H "Content-Type: application/json" -d '{"type":"TOP_UP","issueDate":"2024-03-15T10:30:00","randomNumber":3,"decoderKey":"1234567890ABCDEF","kwh":50.0}'` returns HTTP 200 with a 20-digit token.
+- `curl -X POST http://localhost:8080/token -H "Content-Type: application/json" -d '{"type":"TOP_UP","issueDate":"2024-03-15T10:30:00","randomNumber":3,"decoderKey":"1234567890ABCDEF","kwh":0.5}'` returns HTTP 200 with a 20-digit token.
 - Every known error path returns a structured JSON error with the correct HTTP status code.
 - No null or empty response body is possible from any code path.
 
@@ -787,7 +884,7 @@ Docker. A CI pipeline guards `main`. Tagged releases produce container images au
 ---
 
 ### Task 3.1 — Rewrite `Dockerfile` as multi-stage
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** 1.6 (correct artifact name)
 
 **Current state:**
@@ -838,10 +935,15 @@ target/
 **Done when:** `docker build -t nxt-sts .` succeeds from a clean clone (no `target/` present).
 `docker run -p 8080:8080 nxt-sts` starts the service. The health endpoint responds.
 
+**Notes:** Replaced single-stage host-JAR copy with plan multi-stage build. Added `.dockerignore`.
+`./mvnw verify` passes. Verified 2026-07-06: `docker build -t nxt-sts .` succeeds (no host
+`target/` required); container returns `{"status":"UP"}` from `/actuator/health`; root index
+responds. Used `-p 8081:8080` locally because dev server occupied 8080.
+
 ---
 
 ### Task 3.2 — Add Maven wrapper
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** nothing
 
 **Target state:**
@@ -858,10 +960,14 @@ Commit `mvnw`, `mvnw.cmd`, and `.mvn/`.
 **Done when:** `./mvnw clean package -DskipTests` succeeds on a machine with no local Maven
 installation (only the JDK).
 
+**Notes:** Generated via `mvn wrapper:wrapper -Dmaven=3.9.9`. Maven pinned to 3.9.9 in
+`.mvn/wrapper/maven-wrapper.properties` (wrapper plugin 3.3.4, `distributionType=only-script`).
+Verified: `./mvnw verify` and `./mvnw clean package -DskipTests` both pass.
+
 ---
 
 ### Task 3.3 — Add Spring Boot Actuator and committed config
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** nothing
 
 **Current state:**
@@ -895,10 +1001,15 @@ pages. Verified in Task 2.4 / Phase 2 checkpoint.
 
 **Done when:** `GET /actuator/health` returns `{"status":"UP"}`.
 
+**Notes:** Extended existing `application.properties` (Phase 2 already had
+`springdoc.swagger-ui.path=/swagger`); kept `/swagger` rather than plan sample `/swagger-ui.html`.
+Added `spring-boot-starter-actuator` (no explicit version — inherits from Boot parent). `./mvnw verify`
+passes; test context logs expose health + info under `/actuator`.
+
 ---
 
 ### Task 3.4 — Add GitHub Actions CI pipeline
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-06)
 - **Depends on:** 3.2 (Maven wrapper must exist for CI to use it)
 
 **Current state:** `.github/` does not exist.
@@ -953,10 +1064,14 @@ jobs:
 **Done when:** a PR to `main` triggers the build workflow and `mvn verify` passes in CI.
 Pushing a `v1.0.0` tag triggers the release workflow and publishes the image to GHCR.
 
+**Notes:** Added both workflows per plan. `./mvnw verify` passes locally. Workflows activate
+after push to GitHub; first green run confirms CI. Release: tag `v*.*.*` on `main`, then set
+GHCR package visibility if needed.
+
 ---
 
 ### Task 3.5 — Update README and CONTRIBUTING for the new structure
-- [ ] **Status:** Not started
+- [x] **Status:** Done (2026-07-07)
 - **Depends on:** 3.1, 3.2, 3.3, 3.4, 2.2, 2.7, 2.8
 
 **Current state:**
@@ -1003,6 +1118,13 @@ Add a **"Adding a token type"** section:
 context from this document. `CONTRIBUTING.md` explains how to add a token type concretely.
 README links to Swagger UI and documents `randomNumber` constraints clearly.
 
+**Notes:** Updated `README.md` for the current open-source-ready shape of the project:
+`./mvnw` commands, multi-stage Docker flow, configuration reference table, CI / GHCR section,
+API documentation endpoints, supported token types, and expanded `randomNumber` guidance.
+Updated `CONTRIBUTING.md` with `./mvnw` usage and a concrete "Adding a token type" section.
+Added `docs/index.md` plus agent/rule guidance so future agents load only relevant docs instead
+of pulling the entire docs tree into context up front.
+
 ---
 
 ### Phase 3 checkpoint
@@ -1021,6 +1143,21 @@ README links to Swagger UI and documents `randomNumber` constraints clearly.
 
 If the architectural invariant (see above) was respected throughout phases 1–3, Phase 4 is
 purely a Maven packaging and publishing exercise — no code logic needs to change.
+
+### Phase 4 handoff
+
+- **Status:** Intentionally deferred. Do not start Phase 4 just because it exists in the roadmap.
+- **Trigger to start:** A concrete `sts-core` consumer exists, such as another JVM service,
+  offline vending tool, batch job, or partner integration that needs in-process token generation.
+- **First docs to read:** `docs/index.md`, this Phase 4 section, and the relevant ADR in
+  `docs/architecture/` describing the `sts-core` boundary.
+- **Main invariant:** Keep the extraction mechanical, not architectural. The boundary established
+  in phases 1–3 means `co.nxtgrid.token.*` and `co.nxtgrid.ca.*` remain Spring-free, while HTTP,
+  validation, OpenAPI, and controller concerns stay in the wrapper layer.
+- **Do not change casually:** Token output behavior. If crypto behavior changes intentionally,
+  update the regression vectors and document the reason explicitly.
+- **Success condition:** Splitting into `sts-core` and `sts-service` feels like packaging and
+  release work, not a redesign of the STS engine.
 
 Work items:
 - **4.1 Split into multi-module Maven project:** create a `sts-core` module (no Spring,
@@ -1052,4 +1189,33 @@ Work items per language:
 
 > Append here as the plan is executed. Format: `YYYY-MM-DD — [task id] — note`
 
-_(empty)_
+2026-07-06 — [2.1] — HTTP wrapper types (`TokenController`, `TokenRequest`, `TokenResponse`,
+`StsUtils`) live in `co.nxtgrid.api.*`; bootstrap stays at `co.nxtgrid.StsApplication`.
+
+2026-07-06 — [2.2 checkpoint] — Before implementing strategies, run an architecture review
+(heavy model) on wrapper vs core placement. Open question: `convertHexStringToReversedByteArray`
+is decoder-key byte-order logic, not HTTP-specific — may belong in `co.nxtgrid.token.*` near
+`DecoderKey` rather than `co.nxtgrid.api.StsUtils`. Decide before Task 2.2 adds more call sites.
+
+2026-07-06 — [2.2 checkpoint RESOLVED] — Decisions: (1) hex/reverse logic → core
+`DecoderKey.fromHex(String)`, delete `api/StsUtils`; (2) strategies in `co.nxtgrid.strategy.*`,
+no `utils` package; (3) `ErrorResponse`/`RootController`/OpenAPI → `co.nxtgrid.api`;
+(4) `TokenStrategy.supports(String)` now, enum deferred to 2.5; (5) 2.2 is a behavior-preserving
+refactor — `requestID="asda"` and null-on-unknown/exception kept; 400/500 mapping → 2.4, UUID
+requestID → after 2.6 vectors. Also noted: `co.nxtgrid.hsm.*` (19 files) is still on disk despite
+Task 1.2 being marked complete — track as a separate Phase 1 cleanup, out of scope for 2.2.
+
+2026-07-06 — [2.4] — Full error handling: controller try/catch removed; `UnsupportedTokenTypeException`;
+`InvalidRangeException` + catch-all `Exception` handlers; SLF4J logging on 500; improved overflow
+message for `randomNumber`.
+
+2026-07-06 — [2.4 follow-up] — `issueDate` format validation: `@JsonFormat` on `TokenRequest`;
+malformed/mistyped `issueDate` returns HTTP 400 with ISO 8601 example message (deferred OpenAPI
+docs remain Task 2.7).
+
+2026-07-06 — [2.6] — JUnit regression suite: 4 token vectors, 8 validation tests, root route test;
+`RootController`/`ServiceInfo` pulled forward from 2.8; `spring-boot-starter-test` added.
+
+2026-07-07 — issueDate — Broadened ISO 8601 acceptance via `IssueDateDeserializer` (fractional
+seconds, UTC/offset suffixes). Offset is ignored; wall-clock date/time fields pass through to
+token generation unchanged. README, OpenAPI schema, and error message aligned.

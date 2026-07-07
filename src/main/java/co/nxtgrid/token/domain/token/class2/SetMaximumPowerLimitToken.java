@@ -8,7 +8,7 @@ import co.nxtgrid.token.domain.base.BitString;
 import co.nxtgrid.token.domain.tokenclass.class2.SetMaximumPowerLimitTokenClass;
 import co.nxtgrid.token.domain.tokensubclass.class2.SetMaximumPowerLimitTokenSubClass;
 import co.nxtgrid.token.exceptions.*;
-import co.nxtgrid.token.generators.tokensdecoder.error.CRCError;
+import co.nxtgrid.token.exceptions.decode.CRCError;
 
 import java.util.HashMap;
 import java.util.Optional;

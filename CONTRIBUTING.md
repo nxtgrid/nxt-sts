@@ -25,7 +25,7 @@ The `main` branch is **production-protected**:
 3. **Make your changes** — keep commits focused and well-described.
 4. **Ensure the project still builds** before opening a PR:
    ```
-   mvn clean install -DskipTests
+   ./mvnw clean package -DskipTests
    ```
 5. **Open a pull request** against `main` in the upstream repository.
    - Write a clear PR title and description explaining the *why*, not just the *what*.
@@ -49,6 +49,22 @@ The `main` branch is **production-protected**:
 - Do not commit IDE or OS-specific files — `.vscode/`, `.DS_Store`, etc. are already git-ignored.
 - Do not commit build artifacts. The `target/` directory is git-ignored.
 - Keep decoder keys, meter credentials, and any other secrets out of source files — use environment variables or external secret management in deployment.
+
+---
+
+## Adding a Token Type
+
+The service uses a `TokenStrategy` interface to dispatch token generation. Adding a new token type is a single-file change — no existing code needs to be modified.
+
+1. Create a class in `src/main/java/co/nxtgrid/strategy/` that implements `TokenStrategy`.
+2. Annotate it with `@Component` — Spring picks it up automatically at startup.
+3. Implement the two interface methods:
+   - `supports(TokenType type)` — return `true` for the type your strategy handles.
+   - `generate(TokenRequest request)` — build the STS domain objects and call the existing `nativetoken` generator.
+4. Add a known-good test vector to `TokenStrategyIntegrationTest` (see existing vectors for the pattern).
+5. Add the new type to the **Supported Token Types** table in `README.md`.
+
+Refer to any existing strategy (e.g. `TopUpTokenStrategy`) as a concrete example.
 
 ---
 

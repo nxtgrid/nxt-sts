@@ -6,7 +6,7 @@ import co.nxtgrid.token.domain.base.BitString;
 import co.nxtgrid.token.domain.tokenclass.class1.InitiateMeterTestDisplayTokenClass;
 import co.nxtgrid.token.domain.tokensubclass.class1.InitiateMeterTestDisplay2TokenSubClass;
 import co.nxtgrid.token.exceptions.*;
-import co.nxtgrid.token.generators.tokensdecoder.error.CRCError;
+import co.nxtgrid.token.exceptions.decode.CRCError;
 
 public class InitiateMeterTestOrDisplay2Token extends Class1Token {
 
