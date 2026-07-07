@@ -156,9 +156,18 @@ docker run -p 8080:8080 \
   nxt-sts
 ```
 
+When using a custom port, set `SERVER_PORT` and map the same host port:
+
+```bash
+docker run -p 9090:9090 \
+  -e SERVER_PORT=9090 \
+  nxt-sts
+```
+
 > **Health checks**
 >
-> The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds.
+> The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds
+> on the port given by `SERVER_PORT` (default 8080).
 > When running with plain Docker, you can disable it if your environment performs its own
 > checks: `docker run --no-healthcheck ...`
 >
@@ -230,12 +239,12 @@ Generates a prepayment token.
 >
 > See the full schema in the [Swagger UI](http://localhost:8080/swagger).
 
-> **`issueDate` — wall-clock semantics**
+> **`issueDate` — wall-clock semantics (UTC)**
 >
 > Accepts ISO 8601 forms such as `"2024-03-15T10:30:00"`, `"2026-07-07T10:12:54.289"`,
 > or `"2026-07-07T10:12:54.289Z"`. Optional fractional seconds and UTC/offset suffixes
-> are allowed. Any time-zone offset is **ignored**; the date and time fields are passed
-> to token generation unchanged.
+> are allowed. Any time-zone offset is **ignored**; the date and time fields are
+> interpreted as **UTC** for TID calculation, independent of the server's timezone.
 
 **Example — TOP_UP**
 

@@ -13,7 +13,8 @@ RUN addgroup -S sts && adduser -S sts -G sts
 WORKDIR /app
 COPY --from=build /app/target/nxt-sts-*.jar app.jar
 USER sts
+ENV SERVER_PORT=8080
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-  CMD wget -qO- http://localhost:8080/actuator/health || exit 1
+  CMD wget -qO- "http://127.0.0.1:${SERVER_PORT}/actuator/health" || exit 1
 ENTRYPOINT ["java", "-jar", "app.jar"]
