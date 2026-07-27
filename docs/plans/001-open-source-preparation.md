@@ -3,7 +3,7 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** Phase 1 complete (Tasks 1.1–1.7); Phase 2 complete (Tasks 2.1–2.8); Phase 3 in progress
+**Status:** Phases 1–3 complete (Tasks 1.1–1.7, 2.1–2.8, 3.1–3.5). Phase 4 / 5 deferred until a concrete consumer exists.
 
 ---
 
@@ -112,7 +112,6 @@ All four generators live under:
 - OpenAPI/Swagger UI documents the API, including the `randomNumber` field (STS RND, 0–15).
 - A CI pipeline builds and tests on every PR. A GitHub release workflow publishes a container
   image to GHCR on tag.
-- `docker-compose up` starts the service locally with no prior knowledge of Spring Boot.
 - Known-good STS token vectors are encoded as JUnit tests, providing a regression safety net
   for future changes.
 
@@ -1152,18 +1151,23 @@ purely a Maven packaging and publishing exercise — no code logic needs to chan
 - **First docs to read:** `docs/index.md`, this Phase 4 section, and the relevant ADR in
   `docs/architecture/` describing the `sts-core` boundary.
 - **Main invariant:** Keep the extraction mechanical, not architectural. The boundary established
-  in phases 1–3 means `co.nxtgrid.token.*` and `co.nxtgrid.ca.*` remain Spring-free, while HTTP,
-  validation, OpenAPI, and controller concerns stay in the wrapper layer.
+  in phases 1–3 means `co.nxtgrid.token.*` remains Spring-free (`co.nxtgrid.ca.*` was removed in
+  Task 1.4), while HTTP, validation, OpenAPI, strategies, and controller concerns stay in the
+  wrapper layer.
 - **Do not change casually:** Token output behavior. If crypto behavior changes intentionally,
   update the regression vectors and document the reason explicitly.
 - **Success condition:** Splitting into `sts-core` and `sts-service` feels like packaging and
   release work, not a redesign of the STS engine.
+- **Public docs:** README Architecture / Roadmap sections describe the package boundary for
+  external readers; keep them in sync if the boundary moves.
 
 Work items:
-- **4.1 Split into multi-module Maven project:** create a `sts-core` module (no Spring,
-  only BouncyCastle + Joda-Time) and an `sts-service` module (Spring Boot, depends on
-  `sts-core`). The four `TokenStrategy` implementations move to `sts-core`; the HTTP layer
-  stays in `sts-service`.
+- **4.1 Split into multi-module Maven project:** create a `sts-core` module containing
+  `co.nxtgrid.token.*` only (no Spring; BouncyCastle + Joda-Time) and an `sts-service` module
+  (Spring Boot, depends on `sts-core`). **`TokenStrategy` implementations stay in
+  `sts-service`** (`co.nxtgrid.strategy.*`) — they bridge HTTP DTOs to domain calls and are not
+  part of the library API. The HTTP layer (`co.nxtgrid.api.*`, `StsApplication`) also stays in
+  `sts-service`.
 - **4.2 Publish `sts-core` to Maven Central:** configure the Maven release plugin and
   Sonatype OSSRH publishing. Requires a `pom.xml` with `<scm>`, `<developers>`, and
   `<distributionManagement>` sections.
@@ -1204,6 +1208,7 @@ no `utils` package; (3) `ErrorResponse`/`RootController`/OpenAPI → `co.nxtgrid
 refactor — `requestID="asda"` and null-on-unknown/exception kept; 400/500 mapping → 2.4, UUID
 requestID → after 2.6 vectors. Also noted: `co.nxtgrid.hsm.*` (19 files) is still on disk despite
 Task 1.2 being marked complete — track as a separate Phase 1 cleanup, out of scope for 2.2.
+**(Resolved later: HSM / prism packages are gone; do not hunt for them.)**
 
 2026-07-06 — [2.4] — Full error handling: controller try/catch removed; `UnsupportedTokenTypeException`;
 `InvalidRangeException` + catch-all `Exception` handlers; SLF4J logging on 500; improved overflow
@@ -1219,3 +1224,19 @@ docs remain Task 2.7).
 2026-07-07 — issueDate — Broadened ISO 8601 acceptance via `IssueDateDeserializer` (fractional
 seconds, UTC/offset suffixes). Offset is ignored; wall-clock date/time fields pass through to
 token generation unchanged. README, OpenAPI schema, and error message aligned.
+
+2026-07-27 — [docs] — Documented `sts-core` package boundary for external readers (README
+Architecture + Roadmap). Fixed Phase 4.1 (strategies stay in `sts-service`, not `sts-core`);
+marked Phases 1–3 complete; aligned ADR-001 / capabilities.md / docs/index.md with live boundary
+(`token.*` only; `ca.*` removed).
+
+2026-07-27 — [requestID] — Replaced leftover `requestID = "asda"` with per-request UUID via
+`StrategySupport.newRequestId()` in all four strategies. Correlation id only (not STS crypto /
+not in HTTP response). ADR-001 decision 3 wording clarified accordingly.
+
+2026-07-27 — [docs] — Dropped unmet `docker-compose up` goal; local run is covered by
+`Dockerfile` + README (`docker build` / `docker run`). No compose file is planned.
+
+2026-07-27 — [docs] — README Roadmap + Key dependencies note planned BouncyCastle upgrade
+(`bcprov-jdk15on:1.70` → `bcprov-jdk18on`). Struck stale plan-log claim that `hsm` was still
+on disk (packages removed).

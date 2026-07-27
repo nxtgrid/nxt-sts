@@ -93,10 +93,12 @@ but is explicitly out of scope for this preparation effort.
   the controller dispatches to the matching strategy. Adding a new token type requires adding
   one class only; no existing file changes.
 
-The hardcoded `requestID = "asda"` is replaced by a generated UUID per request. The
-hardcoded `KeyExpiryNumber(255)` and `BaseDate._2014` are retained as sensible STS defaults
-but moved to named constants in the appropriate strategy class, with a comment explaining
-the STS standard meaning.
+The hardcoded `requestID = "asda"` is replaced by a generated UUID per request
+(`StrategySupport.newRequestId()`). This value is a legacy correlation id on the domain
+`Token` / generator objects only — it is **not** part of the STS crypto or the HTTP
+response. The hardcoded `KeyExpiryNumber(255)` and `BaseDate._2014` are retained as
+sensible STS defaults but moved to named constants in the appropriate strategy class, with
+a comment explaining the STS standard meaning.
 
 ### 4. Replace string-based type dispatch with an enum
 
@@ -137,26 +139,31 @@ the Java implementation to be embedded in other JVM services without an HTTP cal
 that extraction remains a mechanical packaging exercise and not a redesign, **all work done
 in decisions 1–8 must respect the following boundary:**
 
-- **No Spring imports in `co.nxtgrid.token.*` or `co.nxtgrid.ca.*`.** These packages form
-  the future `sts-core` and must compile without Spring on the classpath. If any file in these
-  packages currently imports from `org.springframework.*`, that import must be removed as part
-  of any task that touches the file.
+- **No Spring imports in `co.nxtgrid.token.*`.** This package forms the future `sts-core` and
+  must compile without Spring on the classpath. If any file in it imports from
+  `org.springframework.*`, that import must be removed as part of any task that touches the
+  file. (`co.nxtgrid.ca.*` was evaluated under this rule and fully removed in plan Task 1.4;
+  it is no longer part of the live core boundary.)
 - **`TokenStrategy` implementations are wrapper-layer code.** The four strategy classes
   introduced in decision 3 belong in `co.nxtgrid.strategy.*` (the wrapper layer), not inside
   `token/`. They bridge an HTTP request to a domain call; that translation is the wrapper's
   responsibility. They may carry `@Component` as a Spring marker but must contain no other
   framework dependencies — removing `@Component` must leave them as compilable pure-Java classes.
+  On extraction, strategies stay in `sts-service`; they are not published as part of `sts-core`.
 - **HTTP and web concepts stay in the wrapper layer.** `TokenController`, `RootController`,
   request/response DTOs, OpenAPI `@Schema` annotations, validation annotations, and exception
-  handlers live in `co.nxtgrid` (top-level package), not inside `token/` or `ca/`.
+  handlers live in `co.nxtgrid.api.*` / top-level `co.nxtgrid`, not inside `token/`.
 - **Domain objects (`token/domain/*`) remain plain Java value objects.** No JPA, no Jackson
   annotations, no framework dependencies of any kind.
 
-This constraint is **active immediately** — it is not deferred with Phase 4. Violating it in
-phases 1–3 would require a code redesign before the library can be extracted.
+This constraint is **active immediately** — it is not deferred with Phase 4. Violating it
+would require a code redesign before the library can be extracted. Phases 1–3 of the execution
+plan are complete and respect this boundary.
 
 The extraction itself (multi-module Maven split, Maven Central publication, conformance test
-vectors) is deferred to Phase 4 in the execution plan.
+vectors) remains deferred to Phase 4 in the execution plan until a concrete in-process consumer
+exists. The README Architecture / Roadmap sections summarize the same boundary for external
+readers.
 
 Multi-language ports (TypeScript/npm, PHP/Composer, Python/PyPI) are feasible because the STA
 algorithm is deterministic and can be validated against shared test vectors; they are deferred
@@ -201,9 +208,9 @@ description beyond a single table row.
   to receive contributions confidently.
 - Known-good STS test vectors established in this effort are the foundation for any future
   language port.
-- The `sts-core` boundary is enforced from the start: `co.nxtgrid.token.*` and
-  `co.nxtgrid.ca.*` carry no Spring imports after this effort, meaning Phase 4 (library
-  extraction) is a Maven packaging task, not a code redesign.
+- The `sts-core` boundary is enforced from the start: `co.nxtgrid.token.*` carries no Spring
+  imports after this effort, meaning Phase 4 (library extraction) is a Maven packaging task,
+  not a code redesign.
 - OpenAPI docs and a JSON root route make the service self-describing for operators and
   integrators without prior STS domain knowledge.
 

@@ -18,7 +18,6 @@ public class SetMaximumPowerLimitStrategy implements TokenStrategy {
 
     // STS IEC 62055-41: base date 2014 is the reference epoch for this token generation
     private static final BaseDate STS_BASE_DATE = BaseDate._2014;
-    private static final String REQUEST_ID = "asda";
     private static final int RANDOM_NO_BIT_LENGTH = 4;
 
     @Override
@@ -42,7 +41,7 @@ public class SetMaximumPowerLimitStrategy implements TokenStrategy {
 
         SetMaximumPowerLimitTokenGenerator tokenGenerator =
             new SetMaximumPowerLimitTokenGenerator(
-                REQUEST_ID,
+                StrategySupport.newRequestId(),
                 randomNo,
                 tokenIdentifier,
                 powerLimit,

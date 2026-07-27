@@ -37,10 +37,10 @@ POST /token  ──►  TokenController
                       ▼  dispatches to matching strategy
                   TokenStrategy (interface)
                       │
-                      ├── TopUpTokenStrategy          (TOP_UP)
-                      ├── ClearCreditTokenStrategy    (CLEAR_CREDIT)
-                      ├── ClearTamperTokenStrategy    (CLEAR_TAMPER)
-                      └── SetPowerLimitTokenStrategy  (SET_POWER_LIMIT)
+                      ├── TransferElectricityCreditStrategy  (TOP_UP)
+                      ├── ClearCreditStrategy                (CLEAR_CREDIT)
+                      ├── ClearTamperStrategy                (CLEAR_TAMPER)
+                      └── SetMaximumPowerLimitStrategy       (SET_POWER_LIMIT)
                               │
                               ▼
                       STS domain objects + nativetoken generators
@@ -54,14 +54,53 @@ POST /token  ──►  TokenController
 
 Adding a new token type is a single-file change — create one `TokenStrategy` implementation and Spring picks it up automatically.
 
+### Package boundary (future `sts-core`)
+
+The repository is a single Maven module today, but the code is already split so the STS
+engine can be extracted later without a redesign:
+
+| Layer | Packages | Allowed dependencies |
+|---|---|---|
+| **Core** (future `sts-core`) | `co.nxtgrid.token.*` | Java, BouncyCastle, Joda-Time only — **no Spring** |
+| **Wrapper** (this service) | `co.nxtgrid.api.*`, `co.nxtgrid.strategy.*`, `StsApplication` | Spring Boot, validation, OpenAPI, etc. |
+
+- Domain objects and `nativetoken` generators live under `token/` and have no Spring imports.
+- `TokenStrategy` classes live in the wrapper: they translate HTTP DTOs into domain calls.
+  They are **not** part of the future library artifact.
+- Embedding STS generation in another JVM process means depending on core (`token/` packages /
+  generators), not on `TokenStrategy` or the REST DTOs.
+
+See [ADR-001 decision 7](docs/architecture/001-open-source-preparation.md) for the full
+constraint. Publishing a standalone `sts-core` artifact is deferred until there is a concrete
+in-process consumer — see [Roadmap](#roadmap).
+
 **Key dependencies**
 
 | Library | Purpose |
 |---|---|
 | Spring Boot 3.4 | HTTP server and dependency injection |
-| BouncyCastle 1.70 | STS cryptographic algorithms (STA/EA07) |
+| BouncyCastle `bcprov-jdk15on:1.70` | STS cryptographic algorithms (STA/EA07). Legacy Maven coordinate — planned upgrade to `bcprov-jdk18on` (see [Roadmap](#roadmap)) |
 | Joda-Time 2.13 | IEC 62055-41 date/time handling |
 | springdoc-openapi | Interactive OpenAPI / Swagger UI |
+
+---
+
+## Roadmap
+
+Phases 1–3 of open-source preparation are complete (dead-code removal, HTTP hardening, Docker /
+CI / docs). The following are **intentionally deferred** until someone needs them:
+
+| Next step | What it unlocks | When to start |
+|---|---|---|
+| **Extract `sts-core`** | Publish the Spring-free STA engine as a Maven artifact for embedding in other JVM services | A concrete in-process consumer exists |
+| **Conformance vectors (`test-vectors.json`)** | Language-neutral golden tokens shared by ports and regression suites | Part of / prerequisite for extraction and ports |
+| **Multi-language ports** | TypeScript, PHP, Python (etc.) implementations validated against the same vectors | After conformance vectors exist |
+| **`POST /decode` / HSM** | Token decode API or hardware key storage | Separate product request; not required for library extraction |
+| **Upgrade BouncyCastle** | Move from `bcprov-jdk15on:1.70` to `bcprov-jdk18on` (supported artifact line) | Maintenance / security hygiene; re-run `./mvnw verify` and confirm token vectors unchanged |
+
+Until `sts-core` is published, use this service over HTTP, or call the `co.nxtgrid.token.*`
+generators in-process from a checkout of this repository. Details: engineering plan
+[Phase 4 / 5](docs/plans/001-open-source-preparation.md).
 
 ---
 

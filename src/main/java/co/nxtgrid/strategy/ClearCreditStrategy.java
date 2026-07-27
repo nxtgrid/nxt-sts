@@ -18,7 +18,6 @@ public class ClearCreditStrategy implements TokenStrategy {
 
     // STS IEC 62055-41: base date 2014 is the reference epoch for this token generation
     private static final BaseDate STS_BASE_DATE = BaseDate._2014;
-    private static final String REQUEST_ID = "asda";
     private static final int RANDOM_NO_BIT_LENGTH = 4;
     private static final String ZERO_REGISTER = "0000000000000000";
     private static final int REGISTER_BIT_LENGTH = 16;
@@ -47,7 +46,7 @@ public class ClearCreditStrategy implements TokenStrategy {
             new StandardTransferAlgorithmEncryptionAlgorithm();
 
         ClearCreditTokenGenerator tokenGenerator = new ClearCreditTokenGenerator(
-            REQUEST_ID,
+            StrategySupport.newRequestId(),
             randomNo,
             tokenIdentifier,
             register,

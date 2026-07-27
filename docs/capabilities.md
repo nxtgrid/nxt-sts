@@ -70,4 +70,4 @@ The repository also contains code that is **not** part of the software STA path 
 
 ## Adding a new REST token type
 
-Only four types are wired to `POST /token` today. To expose another row from the table above, add a `TokenStrategy` implementation (planned in open-source preparation Phase 2) that constructs the domain objects and calls the existing `nativetoken` generator. See [CONTRIBUTING.md](../CONTRIBUTING.md) and the engineering plan for details.
+Only four types are wired to `POST /token` today. To expose another row from the table above, add a `TokenStrategy` implementation in `co.nxtgrid.strategy.*` that constructs the domain objects and calls the existing `nativetoken` generator. Strategies are wrapper-layer code (HTTP → domain); the generators themselves live in Spring-free `co.nxtgrid.token.*`. See [CONTRIBUTING.md](../CONTRIBUTING.md) and [ADR-001](architecture/001-open-source-preparation.md) for the package boundary.

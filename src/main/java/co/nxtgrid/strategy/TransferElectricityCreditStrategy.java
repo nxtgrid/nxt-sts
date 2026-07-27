@@ -21,7 +21,6 @@ public class TransferElectricityCreditStrategy implements TokenStrategy {
     private static final BaseDate STS_BASE_DATE = BaseDate._2014;
     // Maximum key expiry: value 255 means "no expiry" per the STS standard
     private static final int KEY_EXPIRY_NO_EXPIRY = 255;
-    private static final String REQUEST_ID = "asda";
     private static final int RANDOM_NO_BIT_LENGTH = 4;
 
     @Override
@@ -46,7 +45,7 @@ public class TransferElectricityCreditStrategy implements TokenStrategy {
 
         TransferElectricityCreditTokenGenerator tokenGenerator =
             new TransferElectricityCreditTokenGenerator(
-                REQUEST_ID,
+                StrategySupport.newRequestId(),
                 tokenIdentifier,
                 randomNo,
                 amountPurchased,
