@@ -12,7 +12,7 @@ public class RootController {
     public ServiceInfo index() {
         return new ServiceInfo(
             "nxt-sts",
-            "1.0.0",
+            "1.0.1",
             "IEC 62055-41 STS prepayment token generation service",
             Map.of(
                 "token", "POST /token",

@@ -54,6 +54,7 @@ current task.
 | `docs/plans/` | Engineering execution plans — tasks, status, done criteria, notes |
 | `docs/architecture/` | Architecture Decision Records — structural decisions and constraints |
 | `docs/capabilities.md` | Supported STS token types and how to add a new one |
+| `CONTRIBUTING.md` → **Releasing** | Version bump checklist, tagging, GHCR verification |
 | `NOTICE` | Upstream attribution (NectarAPI); governs what may be deleted |
 | Source files on disk | Ground truth — docs may drift; always verify against the code |
 

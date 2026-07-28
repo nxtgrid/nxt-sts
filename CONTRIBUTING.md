@@ -74,6 +74,57 @@ If your pull request is merged, you are welcome to add your name and email (or G
 
 ---
 
+## Releasing (maintainers)
+
+Version numbers live in more than one place. Bump them **before** tagging, in a PR merged to `main`.
+
+### 1. Bump the version
+
+Update these three locations to the same semver (e.g. `1.0.2`):
+
+| Location | What to change |
+|---|---|
+| `pom.xml` | `<version>…</version>` (project version, not dependency versions) |
+| `src/main/java/co/nxtgrid/api/RootController.java` | the `"…"` version string in the `ServiceInfo` returned by `GET /` |
+| `src/main/java/co/nxtgrid/api/OpenApiConfig.java` | `.version("…")` on the OpenAPI `Info` bean |
+
+Keep them identical. The Docker/GHCR tag comes from git, not from these strings — if they drift, the image tag can say `v1.0.1` while `/` and Swagger still report `1.0.0`.
+
+### 2. Merge to `main`
+
+Open a PR for the bump (and any other changes that belong in the release), get approval, and merge.
+
+### 3. Tag and push
+
+On the release commit on `main` (after merge):
+
+```bash
+git checkout main
+git pull
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Use a leading `v` and three numeric components (`v1.0.2`). That pattern triggers `.github/workflows/release.yml`.
+
+### 4. Verify the release
+
+Confirm the release workflow succeeded and that these images exist:
+
+```
+ghcr.io/nxtgrid/nxt-sts:vX.Y.Z
+ghcr.io/nxtgrid/nxt-sts:latest
+```
+
+Optionally create a GitHub Release for the tag with notes for operators.
+
+### Notes
+
+- Do **not** retag or force-push an existing `v*` tag unless you are sure no one has pulled that image.
+- If a tag was pushed before the version strings were bumped, leave it and cut the next patch (`vX.Y.Z+1`) after fixing the strings — or accept the mismatch for that one tag.
+
+---
+
 ## License
 
 By submitting a pull request you agree that your contribution will be licensed under the [GNU Affero General Public License v3.0](LICENSE), the same license that covers this project.

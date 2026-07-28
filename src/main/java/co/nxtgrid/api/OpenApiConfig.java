@@ -15,7 +15,7 @@ public class OpenApiConfig {
             .info(
                 new Info()
                     .title("NXT STS")
-                    .version("1.0.0")
+                    .version("1.0.1")
                     .description("IEC 62055-41 STS prepayment token generation service")
             );
     }
