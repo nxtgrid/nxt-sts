@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,11 +18,15 @@ class OpenApiDocumentationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Value("${info.app.version}")
+    private String appVersion;
+
     @Test
     void apiDocs_returnsOpenApiSpec() throws Exception {
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.info.title").value("NXT STS"))
+            .andExpect(jsonPath("$.info.version").value(appVersion))
             .andExpect(jsonPath("$.paths['/token'].post").exists())
             .andExpect(jsonPath("$.components.schemas.TokenRequest.properties.randomNumber.minimum").value(0))
             .andExpect(jsonPath("$.components.schemas.TokenRequest.properties.randomNumber.maximum").value(15));

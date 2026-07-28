@@ -76,19 +76,15 @@ If your pull request is merged, you are welcome to add your name and email (or G
 
 ## Releasing (maintainers)
 
-Version numbers live in more than one place. Bump them **before** tagging, in a PR merged to `main`.
+Bump the project version **before** tagging, in a PR merged to `main`.
 
 ### 1. Bump the version
 
-Update these three locations to the same semver (e.g. `1.0.2`):
+Change only `pom.xml` `<version>…</version>` (the project version, not dependency versions) to the new semver (e.g. `1.0.2`).
 
-| Location | What to change |
-|---|---|
-| `pom.xml` | `<version>…</version>` (project version, not dependency versions) |
-| `src/main/java/co/nxtgrid/api/RootController.java` | the `"…"` version string in the `ServiceInfo` returned by `GET /` |
-| `src/main/java/co/nxtgrid/api/OpenApiConfig.java` | `.version("…")` on the OpenAPI `Info` bean |
+`GET /` and OpenAPI read that value via `info.app.version=@project.version@` in `application.properties` (Maven resource filtering). Do not hardcode the version in Java.
 
-Keep them identical. The Docker/GHCR tag comes from git, not from these strings — if they drift, the image tag can say `v1.0.1` while `/` and Swagger still report `1.0.0`.
+The Docker/GHCR tag still comes from the git tag (`vX.Y.Z`), not from Maven — keep the tag aligned with the pom version (e.g. pom `1.0.2` → tag `v1.0.2`).
 
 ### 2. Merge to `main`
 
@@ -121,7 +117,7 @@ Optionally create a GitHub Release for the tag with notes for operators.
 ### Notes
 
 - Do **not** retag or force-push an existing `v*` tag unless you are sure no one has pulled that image.
-- If a tag was pushed before the version strings were bumped, leave it and cut the next patch (`vX.Y.Z+1`) after fixing the strings — or accept the mismatch for that one tag.
+- If a tag was pushed before the pom version was bumped, leave it and cut the next patch (`vX.Y.Z+1`) after fixing the pom — or accept the mismatch for that one tag.
 
 ---
 

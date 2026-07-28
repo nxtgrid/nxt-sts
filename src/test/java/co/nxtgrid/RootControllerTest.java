@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
@@ -17,12 +18,15 @@ class RootControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Value("${info.app.version}")
+    private String appVersion;
+
     @Test
     void root_returnsServiceIndex() throws Exception {
         mockMvc.perform(get("/"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.name").value("nxt-sts"))
-            .andExpect(jsonPath("$.version").value("1.0.0"))
+            .andExpect(jsonPath("$.version").value(appVersion))
             .andExpect(jsonPath("$.description").isNotEmpty())
             .andExpect(jsonPath("$.endpoints.token").value("POST /token"))
             .andExpect(jsonPath("$.endpoints.health").value("GET /actuator/health"))
