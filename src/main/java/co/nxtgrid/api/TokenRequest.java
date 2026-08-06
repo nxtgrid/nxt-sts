@@ -61,7 +61,9 @@ public class TokenRequest {
 
     @Schema(
         description = "Amount of electricity credit in kWh. Required when type is TOP_UP_KWH "
-            + "(or deprecated alias TOP_UP). Must be zero or greater.",
+            + "(or deprecated alias TOP_UP). Must be zero or greater. Encoded in 0.1 kWh "
+            + "steps: values below 1 kWh are ceiled to the next tenth; values at or above "
+            + "1 kWh are truncated to a tenth. Prefer multiples of 0.1. See README.",
         example = "0.5",
         minimum = "0"
     )

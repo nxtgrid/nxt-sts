@@ -266,7 +266,7 @@ Generates a prepayment token.
 | `issueDate` | `string` | Yes | ISO 8601 datetime (see note below) |
 | `randomNumber` | `integer` | Yes | STS 4-bit RND field — **must be 0–15** (see note below) |
 | `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
-| `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`) |
+| `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`; see quantization note below) |
 | `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
 
 > **`randomNumber` — STS protocol constraint**
@@ -287,6 +287,26 @@ Generates a prepayment token.
 > or `"2026-07-07T10:12:54.289Z"`. Optional fractional seconds and UTC/offset suffixes
 > are allowed. Any time-zone offset is **ignored**; the date and time fields are
 > interpreted as **UTC** for TID calculation, independent of the server's timezone.
+
+> **`kwh` — amount quantization (0.1 kWh steps)**
+>
+> The STS transfer-amount field does not store an arbitrary floating-point kWh value.
+> Credit is encoded in **tenths of a kWh** (0.1 kWh steps). Before packing into the
+> token, this service maps the request `kwh` onto that grid as follows (inherited from
+> [NectarAPI/tokens-service](https://github.com/NectarAPI/tokens-service); unchanged in NXT STS):
+>
+> | Requested `kwh` | Mapping | Effective credit on the token |
+> |---|---|---|
+> | `< 1` | ceil to the next 0.1 kWh | e.g. `0.01` → **0.1**, `0.11` → **0.2**, `0.5` → **0.5** |
+> | `≥ 1` | truncate toward zero to a 0.1 kWh step | e.g. `1.19` → **1.1**, `1.99` → **1.9** |
+>
+> Very small top-ups therefore cannot encode as zero (`0.01` becomes `0.1`). Larger
+> amounts drop any leftover fraction of a tenth rather than rounding up.
+>
+> **Recommendation for callers / MPM:** send `kwh` values that are already multiples of
+> `0.1` so the mapping is exact, and treat billing/ledger amounts as that quantized
+> value (not an unrounded intermediate float). Changing this rule would alter token
+> output for the same inputs and break compatibility with existing meters and systems.
 
 **Example — TOP_UP_KWH**
 
