@@ -15,10 +15,13 @@ Four token types are exposed via `POST /token` today. The underlying STS library
 
 | API `type` | STS class / subclass | Description | REST API |
 |---|---|---|:---:|
-| `TOP_UP` | 0 / 0 | Transfer electricity credit (kWh) | **Yes** |
+| `TOP_UP_KWH` | 0 / 0 | Transfer electricity credit (kWh) | **Yes** |
 | `CLEAR_CREDIT` | 2 / 1 | Clear existing credit on meter | **Yes** |
 | `CLEAR_TAMPER` | 2 / 5 | Clear tamper condition | **Yes** |
 | `SET_POWER_LIMIT` | 2 / 0 | Set maximum power limit | **Yes** |
+
+`TOP_UP` is still accepted as a **deprecated** wire alias for `TOP_UP_KWH` (same path) for older
+callers. Prefer `TOP_UP_KWH` for new integrations.
 
 Tokens are generated using the **Standard Transfer Algorithm (STA / EA07)** via the [Bouncy Castle](https://www.bouncycastle.org/) cryptographic library.
 
@@ -37,7 +40,7 @@ POST /token  ──►  TokenController
                       ▼  dispatches to matching strategy
                   TokenStrategy (interface)
                       │
-                      ├── TransferElectricityCreditStrategy  (TOP_UP)
+                      ├── TransferElectricityCreditStrategy  (TOP_UP_KWH)
                       ├── ClearCreditStrategy                (CLEAR_CREDIT)
                       ├── ClearTamperStrategy                (CLEAR_TAMPER)
                       └── SetMaximumPowerLimitStrategy       (SET_POWER_LIMIT)
@@ -259,11 +262,11 @@ Generates a prepayment token.
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `type` | `string` | Yes | Token type: `TOP_UP`, `CLEAR_CREDIT`, `CLEAR_TAMPER`, `SET_POWER_LIMIT` |
+| `type` | `string` | Yes | Token type: `TOP_UP_KWH`, `CLEAR_CREDIT`, `CLEAR_TAMPER`, `SET_POWER_LIMIT` (deprecated alias: `TOP_UP` → `TOP_UP_KWH`) |
 | `issueDate` | `string` | Yes | ISO 8601 datetime (see note below) |
 | `randomNumber` | `integer` | Yes | STS 4-bit RND field — **must be 0–15** (see note below) |
 | `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
-| `kwh` | `number` | For `TOP_UP` | Amount of electricity credit in kWh |
+| `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`) |
 | `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
 
 > **`randomNumber` — STS protocol constraint**
@@ -285,13 +288,13 @@ Generates a prepayment token.
 > are allowed. Any time-zone offset is **ignored**; the date and time fields are
 > interpreted as **UTC** for TID calculation, independent of the server's timezone.
 
-**Example — TOP_UP**
+**Example — TOP_UP_KWH**
 
 ```bash
 curl -X POST http://localhost:8080/token \
   -H "Content-Type: application/json" \
   -d '{
-    "type": "TOP_UP",
+    "type": "TOP_UP_KWH",
     "issueDate": "2024-03-15T10:30:00",
     "randomNumber": 3,
     "decoderKey": "XXXXXXXXXXXXXXXX",

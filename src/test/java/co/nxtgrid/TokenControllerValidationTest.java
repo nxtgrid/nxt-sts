@@ -15,9 +15,20 @@ import org.springframework.test.web.servlet.MockMvc;
 @AutoConfigureMockMvc
 class TokenControllerValidationTest {
 
-    private static final String VALID_TOP_UP = """
+    /** Deprecated wire alias — still accepted for older callers. */
+    private static final String VALID_TOP_UP_ALIAS = """
         {
           "type": "TOP_UP",
+          "issueDate": "2024-03-15T10:30:00",
+          "randomNumber": 3,
+          "decoderKey": "0123456789ABCDEF",
+          "kwh": 0.5
+        }
+        """;
+
+    private static final String VALID_TOP_UP_KWH = """
+        {
+          "type": "TOP_UP_KWH",
           "issueDate": "2024-03-15T10:30:00",
           "randomNumber": 3,
           "decoderKey": "0123456789ABCDEF",
@@ -277,9 +288,19 @@ class TokenControllerValidationTest {
     }
 
     @Test
-    void acceptsValidRequest() throws Exception {
+    void acceptsTopUpKwh() throws Exception {
         mockMvc.perform(
-            post("/token").contentType(MediaType.APPLICATION_JSON).content(VALID_TOP_UP)
+            post("/token").contentType(MediaType.APPLICATION_JSON).content(VALID_TOP_UP_KWH)
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isString())
+            .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    void acceptsDeprecatedTopUpAlias() throws Exception {
+        mockMvc.perform(
+            post("/token").contentType(MediaType.APPLICATION_JSON).content(VALID_TOP_UP_ALIAS)
         )
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.token").isString())
