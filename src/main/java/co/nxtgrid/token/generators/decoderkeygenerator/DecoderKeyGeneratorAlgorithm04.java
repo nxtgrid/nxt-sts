@@ -38,7 +38,7 @@ public class DecoderKeyGeneratorAlgorithm04 extends DecoderKeyGeneratorAlgorithm
     }
 
     public String getName() {
-        return "DKGA02";
+        return "DKGA04";
     }
 
     public BaseDate getBaseDate() {
