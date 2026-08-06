@@ -12,13 +12,17 @@ This document maps **IEC 62055-41 (STS)** token types to what exists in the code
 
 All generators on the live path use the **Standard Transfer Algorithm (STA / EA07)** with a caller-supplied decoder key.
 
+**Deprecated wire alias:** `TOP_UP` is still accepted on `POST /token` and is normalized to
+`TOP_UP_KWH` at deserialize time (same strategy / generator path). Prefer `TOP_UP_KWH` for new
+callers; remove `TOP_UP` once older servers have been updated.
+
 ---
 
 ## Token generation and decode
 
 | API `type` | STS class / subclass | Description | Generate | Decode | REST API |
 |---|---|---|:---:|:---:|:---:|
-| `TOP_UP` | 0 / 0 | Transfer electricity credit (kWh) | Yes | — | **Yes** |
+| `TOP_UP_KWH` | 0 / 0 | Transfer electricity credit (kWh) | Yes | — | **Yes** |
 | — | 0 / 1 | Transfer water credit | Yes | — | No |
 | — | 0 / 2 | Transfer gas credit | Yes | — | No |
 | — | 0 / 3 | Time token | No | No | No |

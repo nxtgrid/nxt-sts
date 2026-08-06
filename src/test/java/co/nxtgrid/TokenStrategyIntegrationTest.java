@@ -17,12 +17,30 @@ class TokenStrategyIntegrationTest {
 
     private static final String DECODER_KEY = "0123456789ABCDEF";
     private static final String ISSUE_DATE = "2024-03-15T10:30:00";
+    private static final String EXPECTED_TOP_UP_KWH_TOKEN = "58627975513348563046";
 
     @Autowired
     private MockMvc mockMvc;
 
     @Test
-    void topUp_producesExpectedToken() throws Exception {
+    void topUpKwh_producesExpectedToken() throws Exception {
+        postToken(
+            """
+            {
+              "type": "TOP_UP_KWH",
+              "issueDate": "%s",
+              "randomNumber": 3,
+              "decoderKey": "%s",
+              "kwh": 0.5
+            }
+            """.formatted(ISSUE_DATE, DECODER_KEY)
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").value(EXPECTED_TOP_UP_KWH_TOKEN));
+    }
+
+    @Test
+    void topUpDeprecatedAlias_producesSameTokenAsTopUpKwh() throws Exception {
         postToken(
             """
             {
@@ -35,7 +53,7 @@ class TokenStrategyIntegrationTest {
             """.formatted(ISSUE_DATE, DECODER_KEY)
         )
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.token").value("58627975513348563046"));
+            .andExpect(jsonPath("$.token").value(EXPECTED_TOP_UP_KWH_TOKEN));
     }
 
     @Test

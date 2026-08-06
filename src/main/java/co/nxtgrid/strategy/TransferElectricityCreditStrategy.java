@@ -25,7 +25,7 @@ public class TransferElectricityCreditStrategy implements TokenStrategy {
 
     @Override
     public boolean supports(TokenType type) {
-        return TokenType.TOP_UP == type;
+        return TokenType.TOP_UP_KWH == type;
     }
 
     @Override
