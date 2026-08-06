@@ -70,7 +70,10 @@ class TokenControllerValidationTest {
             .andExpect(status().isBadRequest())
             .andExpect(
                 jsonPath("$.error")
-                    .value("type must be one of: TOP_UP, CLEAR_CREDIT, CLEAR_TAMPER, SET_POWER_LIMIT")
+                    .value(
+                        "type must be one of: TOP_UP_KWH, TOP_UP (deprecated alias), "
+                            + "CLEAR_CREDIT, CLEAR_TAMPER, SET_POWER_LIMIT"
+                    )
             );
     }
 
@@ -155,7 +158,7 @@ class TokenControllerValidationTest {
                 )
         )
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.error").value("kwh is required for TOP_UP"));
+            .andExpect(jsonPath("$.error").value("kwh is required for TOP_UP_KWH"));
     }
 
     @Test

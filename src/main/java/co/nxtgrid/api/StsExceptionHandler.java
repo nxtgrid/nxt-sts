@@ -78,7 +78,8 @@ public class StsExceptionHandler {
         Throwable cause = ex.getCause();
         if (cause instanceof InvalidFormatException invalidFormat) {
             if (invalidFormat.getTargetType() == TokenType.class) {
-                return "type must be one of: TOP_UP, CLEAR_CREDIT, CLEAR_TAMPER, SET_POWER_LIMIT";
+                return "type must be one of: TOP_UP_KWH, TOP_UP (deprecated alias), "
+                    + "CLEAR_CREDIT, CLEAR_TAMPER, SET_POWER_LIMIT";
             }
             if (invalidFormat.getTargetType() == LocalDateTime.class || isField(invalidFormat, "issueDate")) {
                 return ISSUE_DATE_FORMAT_MESSAGE;

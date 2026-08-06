@@ -25,7 +25,12 @@ public class TokenRequest {
     @Pattern(regexp = "^[0-9A-Fa-f]{16}$", message = "decoderKey must be exactly 16 hex characters")
     private String decoderKey;
 
-    @Schema(description = "STS token type to generate", example = "TOP_UP")
+    @Schema(
+        description = "STS token type to generate. Prefer TOP_UP_KWH; TOP_UP is a deprecated "
+            + "alias for the same electricity kWh credit token.",
+        example = "TOP_UP_KWH",
+        allowableValues = { "TOP_UP_KWH", "TOP_UP", "CLEAR_CREDIT", "CLEAR_TAMPER", "SET_POWER_LIMIT" }
+    )
     @NotNull
     private TokenType type;
 
@@ -55,7 +60,8 @@ public class TokenRequest {
     private Integer randomNumber;
 
     @Schema(
-        description = "Amount of electricity credit in kWh. Required when type is TOP_UP. Must be zero or greater.",
+        description = "Amount of electricity credit in kWh. Required when type is TOP_UP_KWH "
+            + "(or deprecated alias TOP_UP). Must be zero or greater.",
         example = "0.5",
         minimum = "0"
     )
@@ -70,10 +76,10 @@ public class TokenRequest {
     @PositiveOrZero(message = "powerLimit must be zero or greater")
     private Long powerLimit;
 
-    @AssertTrue(message = "kwh is required for TOP_UP")
+    @AssertTrue(message = "kwh is required for TOP_UP_KWH")
     @JsonIgnore
     public boolean isKwhValidForType() {
-        return type != TokenType.TOP_UP || kwh != null;
+        return type != TokenType.TOP_UP_KWH || kwh != null;
     }
 
     @AssertTrue(message = "powerLimit is required for SET_POWER_LIMIT")
