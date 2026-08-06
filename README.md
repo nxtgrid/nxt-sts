@@ -269,15 +269,24 @@ Generates a prepayment token.
 | `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`; see quantization note below) |
 | `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
 
-> **`randomNumber` — STS protocol constraint**
+> **`randomNumber` — STS protocol constraint (and same-minute uniqueness)**
 >
 > This field maps directly to the 4-bit RND field in the IEC 62055-41 token structure.
 > The protocol defines it as a 4-bit value, so **only 0–15 is valid** — this is not an
 > arbitrary API limit. Values outside this range will be rejected with HTTP 400.
 >
-> Vary this value between consecutive token issues for the same meter. Meters reject
-> tokens with the same `randomNumber` as the most recently accepted token to prevent
-> replay attacks. A value of 0 is valid but should not be reused immediately.
+> The STS token identifier (TID) is **minute-granular**: only the UTC date and minute of
+> `issueDate` enter the TID (seconds and sub-seconds are ignored). So `10:30:00` and
+> `10:30:59` produce the same TID. With identical `decoderKey`, amount, and other
+> fields, two requests in the same wall-clock minute produce a **byte-identical token**
+> unless `randomNumber` differs.
+>
+> Callers should therefore **track the last-used RND per meter** and advance it for each
+> new issue (especially when vending more than once in the same minute). Meters also
+> reject a token that reuses the same `randomNumber` as the most recently accepted token
+> (anti-replay). A value of 0 is valid but should not be reused immediately. With only
+> 16 possible RND values, high-frequency same-minute vending on one meter will exhaust
+> the space unless the caller waits for the next minute or otherwise avoids collisions.
 >
 > See the full schema in the [Swagger UI](http://localhost:8080/swagger).
 
@@ -287,6 +296,9 @@ Generates a prepayment token.
 > or `"2026-07-07T10:12:54.289Z"`. Optional fractional seconds and UTC/offset suffixes
 > are allowed. Any time-zone offset is **ignored**; the date and time fields are
 > interpreted as **UTC** for TID calculation, independent of the server's timezone.
+>
+> TID uses **minute resolution** only — changing seconds within the same minute does not
+> change the token. For uniqueness of consecutive issues, vary `randomNumber` (see above).
 
 > **`kwh` — amount quantization (0.1 kWh steps)**
 >

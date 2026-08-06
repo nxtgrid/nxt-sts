@@ -38,7 +38,9 @@ public class TokenRequest {
     @Schema(
         description = "Token issue date/time in ISO 8601 format. Optional fractional seconds and "
             + "UTC/offset suffixes are accepted; any offset is ignored and the wall-clock date "
-            + "and time fields are interpreted as UTC for token generation.",
+            + "and time fields are interpreted as UTC for TID. TID is minute-granular — "
+            + "seconds do not differentiate tokens; vary randomNumber for same-minute issues. "
+            + "See README.",
         example = "2024-03-15T10:30:00",
         type = "string",
         format = "date-time"
@@ -49,8 +51,10 @@ public class TokenRequest {
 
     @Schema(
         description = "STS RND field (4 bits). Must be an integer from 0 to 15. "
-            + "Vary between token issues to avoid duplicate-token rejection on the meter. "
-            + "This is not a meter serial number or other large identifier.",
+            + "TID is minute-granular, so identical inputs in the same UTC minute produce "
+            + "the same token unless this value differs — track last-used RND per meter "
+            + "and advance it between issues. Also avoids meter anti-replay rejection. "
+            + "This is not a meter serial number or other large identifier. See README.",
         minimum = "0",
         maximum = "15",
         example = "3"
