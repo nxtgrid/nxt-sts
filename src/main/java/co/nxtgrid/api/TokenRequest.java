@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -61,13 +62,16 @@ public class TokenRequest {
 
     @Schema(
         description = "Amount of electricity credit in kWh. Required when type is TOP_UP_KWH "
-            + "(or deprecated alias TOP_UP). Must be zero or greater. Encoded in 0.1 kWh "
-            + "steps: values below 1 kWh are ceiled to the next tenth; values at or above "
-            + "1 kWh are truncated to a tenth. Prefer multiples of 0.1. See README.",
+            + "(or deprecated alias TOP_UP). Must be zero or greater and at most 1820162.4 "
+            + "(STS 16-bit amount maximum). Encoded in 0.1 kWh steps: values below 1 kWh "
+            + "are ceiled to the next tenth; values at or above 1 kWh are truncated to a "
+            + "tenth. Prefer multiples of 0.1. See README.",
         example = "0.5",
-        minimum = "0"
+        minimum = "0",
+        maximum = "1820162.4"
     )
     @PositiveOrZero(message = "kwh must be zero or greater")
+    @DecimalMax(value = "1820162.4", message = "kwh must not exceed 1820162.4")
     private Double kwh;
 
     @Schema(

@@ -307,6 +307,9 @@ Generates a prepayment token.
 > `0.1` so the mapping is exact, and treat billing/ledger amounts as that quantized
 > value (not an unrounded intermediate float). Changing this rule would alter token
 > output for the same inputs and break compatibility with existing meters and systems.
+>
+> **Maximum:** `kwh` must not exceed **1820162.4** (the STS 16-bit amount field maximum).
+> Larger values are rejected with HTTP 400.
 
 **Example — TOP_UP_KWH**
 

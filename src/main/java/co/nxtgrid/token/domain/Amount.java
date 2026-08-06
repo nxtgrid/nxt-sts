@@ -16,14 +16,22 @@ public class Amount implements Entity {
 
     public Amount() {}
 
+    /**
+     * Maximum encodable STS transfer amount in kWh. The 16-bit amount field (exponent 0–3,
+     * mantissa 0–16383) tops out at 18_201_624 tenths of a unit, i.e. 1_820_162.4 kWh.
+     * Comparing against 18_201_624 here would be off by 10× (that constant is in tenths).
+     */
+    private static final double UNITS_PURCHASED_MIN_KWH = 0;
+    private static final double UNITS_PURCHASED_MAX_KWH = 1_820_162.4;
+    /** Max value after scaling kWh → tenths; must fit STS amount encoding (exp ≤ 3). */
+    private static final long MAX_AMOUNT_TENTHS = 18_201_624L;
+
     public Amount(double unitsPurchased)
         throws InvalidUnitsPurchasedException, InvalidRangeException, InvalidBitStringException {
-        final int UNITS_PURCHASED_MIN = 0;
-        final int UNITS_PURCHASED_MAX = 18201624;
-
-        if (unitsPurchased < UNITS_PURCHASED_MIN
-                || unitsPurchased > UNITS_PURCHASED_MAX)
-            throw new InvalidUnitsPurchasedException("Invalid number of units purchased!");
+        if (unitsPurchased < UNITS_PURCHASED_MIN_KWH
+                || unitsPurchased > UNITS_PURCHASED_MAX_KWH)
+            throw new InvalidUnitsPurchasedException(
+                "kwh must be between 0 and 1820162.4 (STS maximum)");
 
         setAmountPurchased(unitsPurchased);
         generateAmountBitString() ;
@@ -58,7 +66,13 @@ public class Amount implements Entity {
 
     private void generateAmountBitString()
      throws InvalidUnitsPurchasedException, InvalidRangeException, InvalidBitStringException {
-        double refactoredAmountBits = unitsPurchased < 1 ? (int) Math.ceil(unitsPurchased * 10) : (int) (unitsPurchased * 10);
+        double refactoredAmountBits = unitsPurchased < 1
+            ? (int) Math.ceil(unitsPurchased * 10)
+            : (int) (unitsPurchased * 10);
+        if (refactoredAmountBits > MAX_AMOUNT_TENTHS) {
+            throw new InvalidUnitsPurchasedException(
+                "kwh must be between 0 and 1820162.4 (STS maximum)");
+        }
         BitString generatedAmountBitString = Utils.convertToBitString(refactoredAmountBits) ;
         generatedAmountBitString.setLength(NO_OF_BITS);
         setBitString(generatedAmountBitString);
