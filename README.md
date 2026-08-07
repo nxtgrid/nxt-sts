@@ -109,9 +109,55 @@ generators in-process from a checkout of this repository. Details: engineering p
 
 ## Prerequisites
 
-- Java 17+
+- Java 17+ (for local Maven builds; not required if you only pull the container image)
+- Docker (optional, for the container path below)
 
 No local Maven installation is required — the repository includes the **Maven wrapper** (`mvnw`).
+
+---
+
+## Quick start
+
+Deploy the service, confirm it is up, then generate a token.
+
+**1. Run** (pick one):
+
+```bash
+# Released image from GHCR
+docker run --rm -p 8080:8080 ghcr.io/nxtgrid/nxt-sts:latest
+
+# Or build and run from this repo
+docker build -t nxt-sts . && docker run --rm -p 8080:8080 nxt-sts
+
+# Or run from source (Java 17+)
+./mvnw spring-boot:run
+```
+
+**2. Health check:**
+
+```bash
+curl -s http://localhost:8080/actuator/health
+# {"status":"UP"}
+```
+
+**3. Generate a token** (replace the decoder key with a real 16-hex-char meter key):
+
+```bash
+curl -X POST http://localhost:8080/token \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "TOP_UP_KWH",
+    "issueDate": "2024-03-15T10:30:00",
+    "randomNumber": 3,
+    "decoderKey": "XXXXXXXXXXXXXXXX",
+    "kwh": 0.5
+  }'
+```
+
+Interactive API explorer: [http://localhost:8080/swagger](http://localhost:8080/swagger).  
+More detail: [Docker](#docker), [Running](#running), [API Reference](#api-reference).
+
+**Production:** run the same container image on your cloud or host (App Platform, ECS, Cloud Run, a VM, Kubernetes, etc.). Map port **8080**, point the platform health check at **`/actuator/health`**, then call **`POST /token`** from your backend over HTTP. No special STS-specific deploy steps beyond a normal container service.
 
 ---
 
