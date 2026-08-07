@@ -217,6 +217,72 @@ class TokenControllerValidationTest {
     }
 
     @Test
+    void acceptsMaximumEncodableKwhForTopUp() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "TOP_UP_KWH",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "kwh": 1820162.4
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.token").isString())
+            .andExpect(jsonPath("$.token").isNotEmpty());
+    }
+
+    @Test
+    void rejectsKwhAboveStsMaximumAsBadRequest() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "TOP_UP_KWH",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "kwh": 1820163
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("kwh must not exceed 1820162.4"))
+            .andExpect(jsonPath("$.field").value("kwh"));
+    }
+
+    @Test
+    void rejectsKwhFarAboveFormerIncorrectGuardAsBadRequest() throws Exception {
+        mockMvc.perform(
+            post("/token")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "type": "TOP_UP_KWH",
+                      "issueDate": "2024-03-15T10:30:00",
+                      "randomNumber": 3,
+                      "decoderKey": "0123456789ABCDEF",
+                      "kwh": 18201625
+                    }
+                    """
+                )
+        )
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.error").value("kwh must not exceed 1820162.4"))
+            .andExpect(jsonPath("$.field").value("kwh"));
+    }
+
+    @Test
     void acceptsZeroPowerLimitForSetPowerLimit() throws Exception {
         mockMvc.perform(
             post("/token")

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -37,7 +38,9 @@ public class TokenRequest {
     @Schema(
         description = "Token issue date/time in ISO 8601 format. Optional fractional seconds and "
             + "UTC/offset suffixes are accepted; any offset is ignored and the wall-clock date "
-            + "and time fields are interpreted as UTC for token generation.",
+            + "and time fields are interpreted as UTC for TID. TID is minute-granular — "
+            + "seconds do not differentiate tokens; vary randomNumber for same-minute issues. "
+            + "See README.",
         example = "2024-03-15T10:30:00",
         type = "string",
         format = "date-time"
@@ -48,8 +51,10 @@ public class TokenRequest {
 
     @Schema(
         description = "STS RND field (4 bits). Must be an integer from 0 to 15. "
-            + "Vary between token issues to avoid duplicate-token rejection on the meter. "
-            + "This is not a meter serial number or other large identifier.",
+            + "TID is minute-granular, so identical inputs in the same UTC minute produce "
+            + "the same token unless this value differs — track last-used RND per meter "
+            + "and advance it between issues. Also avoids meter anti-replay rejection. "
+            + "This is not a meter serial number or other large identifier. See README.",
         minimum = "0",
         maximum = "15",
         example = "3"
@@ -61,11 +66,16 @@ public class TokenRequest {
 
     @Schema(
         description = "Amount of electricity credit in kWh. Required when type is TOP_UP_KWH "
-            + "(or deprecated alias TOP_UP). Must be zero or greater.",
+            + "(or deprecated alias TOP_UP). Must be zero or greater and at most 1820162.4 "
+            + "(STS 16-bit amount maximum). Encoded in 0.1 kWh steps: values below 1 kWh "
+            + "are ceiled to the next tenth; values at or above 1 kWh are truncated to a "
+            + "tenth. Prefer multiples of 0.1. See README.",
         example = "0.5",
-        minimum = "0"
+        minimum = "0",
+        maximum = "1820162.4"
     )
     @PositiveOrZero(message = "kwh must be zero or greater")
+    @DecimalMax(value = "1820162.4", message = "kwh must not exceed 1820162.4")
     private Double kwh;
 
     @Schema(

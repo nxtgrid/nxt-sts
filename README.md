@@ -266,18 +266,27 @@ Generates a prepayment token.
 | `issueDate` | `string` | Yes | ISO 8601 datetime (see note below) |
 | `randomNumber` | `integer` | Yes | STS 4-bit RND field — **must be 0–15** (see note below) |
 | `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
-| `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`) |
+| `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`; see quantization note below) |
 | `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
 
-> **`randomNumber` — STS protocol constraint**
+> **`randomNumber` — STS protocol constraint (and same-minute uniqueness)**
 >
 > This field maps directly to the 4-bit RND field in the IEC 62055-41 token structure.
 > The protocol defines it as a 4-bit value, so **only 0–15 is valid** — this is not an
 > arbitrary API limit. Values outside this range will be rejected with HTTP 400.
 >
-> Vary this value between consecutive token issues for the same meter. Meters reject
-> tokens with the same `randomNumber` as the most recently accepted token to prevent
-> replay attacks. A value of 0 is valid but should not be reused immediately.
+> The STS token identifier (TID) is **minute-granular**: only the UTC date and minute of
+> `issueDate` enter the TID (seconds and sub-seconds are ignored). So `10:30:00` and
+> `10:30:59` produce the same TID. With identical `decoderKey`, amount, and other
+> fields, two requests in the same wall-clock minute produce a **byte-identical token**
+> unless `randomNumber` differs.
+>
+> Callers should therefore **track the last-used RND per meter** and advance it for each
+> new issue (especially when vending more than once in the same minute). Meters also
+> reject a token that reuses the same `randomNumber` as the most recently accepted token
+> (anti-replay). A value of 0 is valid but should not be reused immediately. With only
+> 16 possible RND values, high-frequency same-minute vending on one meter will exhaust
+> the space unless the caller waits for the next minute or otherwise avoids collisions.
 >
 > See the full schema in the [Swagger UI](http://localhost:8080/swagger).
 
@@ -287,6 +296,32 @@ Generates a prepayment token.
 > or `"2026-07-07T10:12:54.289Z"`. Optional fractional seconds and UTC/offset suffixes
 > are allowed. Any time-zone offset is **ignored**; the date and time fields are
 > interpreted as **UTC** for TID calculation, independent of the server's timezone.
+>
+> TID uses **minute resolution** only — changing seconds within the same minute does not
+> change the token. For uniqueness of consecutive issues, vary `randomNumber` (see above).
+
+> **`kwh` — amount quantization (0.1 kWh steps)**
+>
+> The STS transfer-amount field does not store an arbitrary floating-point kWh value.
+> Credit is encoded in **tenths of a kWh** (0.1 kWh steps). Before packing into the
+> token, this service maps the request `kwh` onto that grid as follows (inherited from
+> [NectarAPI/tokens-service](https://github.com/NectarAPI/tokens-service); unchanged in NXT STS):
+>
+> | Requested `kwh` | Mapping | Effective credit on the token |
+> |---|---|---|
+> | `< 1` | ceil to the next 0.1 kWh | e.g. `0.01` → **0.1**, `0.11` → **0.2**, `0.5` → **0.5** |
+> | `≥ 1` | truncate toward zero to a 0.1 kWh step | e.g. `1.19` → **1.1**, `1.99` → **1.9** |
+>
+> Very small top-ups therefore cannot encode as zero (`0.01` becomes `0.1`). Larger
+> amounts drop any leftover fraction of a tenth rather than rounding up.
+>
+> **Recommendation for callers / MPM:** send `kwh` values that are already multiples of
+> `0.1` so the mapping is exact, and treat billing/ledger amounts as that quantized
+> value (not an unrounded intermediate float). Changing this rule would alter token
+> output for the same inputs and break compatibility with existing meters and systems.
+>
+> **Maximum:** `kwh` must not exceed **1820162.4** (the STS 16-bit amount field maximum).
+> Larger values are rejected with HTTP 400.
 
 **Example — TOP_UP_KWH**
 

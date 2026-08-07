@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
 import co.nxtgrid.token.exceptions.InvalidRangeException;
+import co.nxtgrid.token.exceptions.InvalidUnitsPurchasedException;
 
 @RestControllerAdvice
 public class StsExceptionHandler {
@@ -47,6 +48,12 @@ public class StsExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleDomainRange(InvalidRangeException ex) {
         return new ErrorResponse(ex.getMessage(), null);
+    }
+
+    @ExceptionHandler(InvalidUnitsPurchasedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidUnitsPurchased(InvalidUnitsPurchasedException ex) {
+        return new ErrorResponse(ex.getMessage(), "kwh");
     }
 
     @ExceptionHandler(UnsupportedTokenTypeException.class)

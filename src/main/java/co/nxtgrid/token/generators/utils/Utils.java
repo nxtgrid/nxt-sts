@@ -37,7 +37,15 @@ public class Utils {
             mantissa /= 10;
 
         }
-        return new BitString((exponent << 14) + (long) Math.ceil(mantissa));
+        long encoded = (exponent << 14) + (long) Math.ceil(mantissa);
+        // Exponent is only 2 bits in the STS amount field; values that need exp > 3
+        // (or otherwise exceed 16 bits) are not representable — reject rather than
+        // emit bits the decoder will refuse (see convertToDouble).
+        if (exponent > 3 || encoded > 0xFFFFL) {
+            throw new IllegalArgumentException(
+                "amount exceeds the maximum encodable STS 16-bit value");
+        }
+        return new BitString(encoded);
     }
 
     public static double convertToDouble(BitString amountBitString)
