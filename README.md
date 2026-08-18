@@ -270,14 +270,15 @@ docker run -p 9090:9090 \
 
 Every push to `main` and every pull request runs `./mvnw verify` via GitHub Actions (`build.yml`).
 
-Tagged releases (e.g. `v1.2.0`) automatically publish a Docker image to the GitHub Container Registry:
+Tagged releases (e.g. `v1.2.0`) automatically publish a multi-arch Docker image
+(`linux/amd64` and `linux/arm64`) to the GitHub Container Registry:
 
 ```
 ghcr.io/nxtgrid/nxt-sts:v1.2.0
 ghcr.io/nxtgrid/nxt-sts:latest
 ```
 
-Pull and run a released image:
+Pull and run a released image (Apple Silicon and x86 hosts pick the matching arch):
 
 ```bash
 docker run -p 8080:8080 ghcr.io/nxtgrid/nxt-sts:latest

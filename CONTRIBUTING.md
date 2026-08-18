@@ -112,6 +112,12 @@ ghcr.io/nxtgrid/nxt-sts:vX.Y.Z
 ghcr.io/nxtgrid/nxt-sts:latest
 ```
 
+Each tag is a multi-arch manifest (`linux/amd64` and `linux/arm64`). Confirm both platforms:
+
+```bash
+docker buildx imagetools inspect ghcr.io/nxtgrid/nxt-sts:vX.Y.Z
+```
+
 Optionally create a GitHub Release for the tag with notes for operators.
 
 ### Notes
