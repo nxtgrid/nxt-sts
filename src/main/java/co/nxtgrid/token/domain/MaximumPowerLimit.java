@@ -15,9 +15,21 @@ public class MaximumPowerLimit implements Entity {
     private BitString maximumPowerLimitBitString;
     private final int NO_OF_BITS = 16;
 
+    /**
+     * Maximum encodable STS MPL value. The same 16-bit amount field as credit tokens
+     * (exponent 0–3, mantissa 0–16383) tops out at 18_201_624. Unlike {@link Amount},
+     * MPL is passed to {@link Utils#convertToBitString} without kWh→tenths scaling.
+     */
+    private static final long MPL_MIN = 0L;
+    private static final long MPL_MAX = 18_201_624L;
+
     public MaximumPowerLimit(long maximumPowerLimit)
             throws InvalidMPLException, InvalidUnitsPurchasedException,
             InvalidRangeException, InvalidBitStringException {
+        if (maximumPowerLimit < MPL_MIN || maximumPowerLimit > MPL_MAX) {
+            throw new InvalidMPLException(
+                "powerLimit must be between 0 and 18201624 (STS maximum)");
+        }
         setMaximumPowerLimit(maximumPowerLimit);
         generateMPLBitString();
     }

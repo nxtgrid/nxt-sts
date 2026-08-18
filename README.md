@@ -314,7 +314,7 @@ Generates a prepayment token.
 | `randomNumber` | `integer` | Yes | STS 4-bit RND field — **must be 0–15** (see note below) |
 | `decoderKey` | `string` | Yes | Meter decoder key as a hexadecimal string (16 hex chars = 8 bytes) |
 | `kwh` | `number` | For `TOP_UP_KWH` | Amount of electricity credit in kWh (also required when using deprecated `TOP_UP`; see quantization note below) |
-| `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit value |
+| `powerLimit` | `integer` | For `SET_POWER_LIMIT` | Maximum power limit (see note below) |
 
 > **`randomNumber` — STS protocol constraint (and same-minute uniqueness)**
 >
@@ -369,6 +369,12 @@ Generates a prepayment token.
 >
 > **Maximum:** `kwh` must not exceed **1820162.4** (the STS 16-bit amount field maximum).
 > Larger values are rejected with HTTP 400.
+
+> **`powerLimit` — STS maximum**
+>
+> `SET_POWER_LIMIT` uses the same 16-bit STS amount encoding as credit tokens, but the
+> request value is **not** scaled by 10 (unlike `kwh`). `powerLimit` must be an integer
+> from **0** to **18201624**. Larger values are rejected with HTTP 400.
 
 **Example — TOP_UP_KWH**
 

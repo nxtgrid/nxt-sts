@@ -79,11 +79,14 @@ public class TokenRequest {
     private Double kwh;
 
     @Schema(
-        description = "Maximum power limit value. Required when type is SET_POWER_LIMIT. Must be zero or greater.",
+        description = "Maximum power limit value. Required when type is SET_POWER_LIMIT. Must be zero or greater "
+            + "and at most 18201624 (STS 16-bit amount maximum).",
         example = "5000",
-        minimum = "0"
+        minimum = "0",
+        maximum = "18201624"
     )
     @PositiveOrZero(message = "powerLimit must be zero or greater")
+    @Max(value = 18_201_624, message = "powerLimit must not exceed 18201624")
     private Long powerLimit;
 
     @AssertTrue(message = "kwh is required for TOP_UP_KWH")

@@ -17,6 +17,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 
+import co.nxtgrid.token.exceptions.InvalidMPLException;
 import co.nxtgrid.token.exceptions.InvalidRangeException;
 import co.nxtgrid.token.exceptions.InvalidUnitsPurchasedException;
 
@@ -54,6 +55,18 @@ public class StsExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleInvalidUnitsPurchased(InvalidUnitsPurchasedException ex) {
         return new ErrorResponse(ex.getMessage(), "kwh");
+    }
+
+    @ExceptionHandler(InvalidMPLException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleInvalidMpl(InvalidMPLException ex) {
+        return new ErrorResponse(ex.getMessage(), "powerLimit");
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
+        return new ErrorResponse(ex.getMessage(), null);
     }
 
     @ExceptionHandler(UnsupportedTokenTypeException.class)
