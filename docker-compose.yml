@@ -1,0 +1,22 @@
+# NXT STS — Compose service definition.
+#
+# Standalone (this repo):
+#   docker compose up
+#
+# Sidecar (copy this service into your stack):
+#   Other containers reach STS at http://nxt-sts:8080 on the Compose network.
+#   Drop `ports` if you do not need STS published on the host.
+#   Pin `image` to a release tag in production (ghcr.io/nxtgrid/nxt-sts:vX.Y.Z).
+#
+# From a clone, build locally instead of pulling: uncomment `build` and drop `image`.
+
+services:
+  nxt-sts:
+    image: ghcr.io/nxtgrid/nxt-sts:latest
+    # build: .
+    ports:
+      - '8080:8080'
+    restart: unless-stopped
+    # Optional: override listen port (map the host port to match).
+    # environment:
+    #   SERVER_PORT: '8080'

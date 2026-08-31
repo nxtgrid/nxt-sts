@@ -126,6 +126,9 @@ Deploy the service, confirm it is up, then generate a token.
 # Released image from GHCR
 docker run --rm -p 8080:8080 ghcr.io/nxtgrid/nxt-sts:latest
 
+# Or the same image via Compose (this repo's docker-compose.yml)
+docker compose up
+
 # Or build and run from this repo
 docker build -t nxt-sts . && docker run --rm -p 8080:8080 nxt-sts
 
@@ -157,7 +160,7 @@ curl -X POST http://localhost:8080/token \
 Interactive API explorer: [http://localhost:8080/swagger](http://localhost:8080/swagger).  
 More detail: [Docker](#docker), [Running](#running), [API Reference](#api-reference).
 
-**Production:** run the same container image on your cloud or host (App Platform, ECS, Cloud Run, a VM, Kubernetes, etc.). Map port **8080**, point the platform health check at **`/actuator/health`**, then call **`POST /token`** from your backend over HTTP. No special STS-specific deploy steps beyond a normal container service.
+**Production:** run the same container image on your cloud or host (App Platform, ECS, Cloud Run, a VM, Kubernetes, etc.). Map port **8080**, point the platform health check at **`/actuator/health`**, then call **`POST /token`** from your backend over HTTP. To run STS next to another app on Compose, copy the `nxt-sts` service from [`docker-compose.yml`](docker-compose.yml) — see [Sidecar / Compose](#sidecar--compose).
 
 ---
 
@@ -264,6 +267,31 @@ docker run -p 9090:9090 \
 > `/actuator/health` (or use its default TCP check on port 8080) — the Dockerfile health
 > check is not used in those environments.
 
+### Sidecar / Compose
+
+[`docker-compose.yml`](docker-compose.yml) is a regular Compose file: `docker compose up` from
+this repo starts STS alone. The same `nxt-sts` service is the fragment to copy into another
+stack (such as [nxt-device-messaging](https://github.com/nxtgrid/nxt-device-messaging), or any other caller).
+
+On the Compose network the caller uses **`http://nxt-sts:8080`**. Drop `ports` in the copy if
+STS should not be published on the host. Pin `image` to a release tag in production.
+
+```yaml
+# In your stack — copy from this repo's docker-compose.yml, then typically:
+services:
+  nxt-sts:
+    image: ghcr.io/nxtgrid/nxt-sts:vX.Y.Z   # pin a release tag; do not copy `build`
+    restart: unless-stopped
+    # no `ports:` — stay on the Compose network only
+
+  your-app:
+    depends_on:
+      nxt-sts:
+        condition: service_healthy   # uses the image HEALTHCHECK
+    environment:
+      NXT_STS_URL: http://nxt-sts:8080   # or whatever your app uses for the STS base URL
+```
+
 ---
 
 ## CI / Container Image
@@ -362,7 +390,7 @@ Generates a prepayment token.
 > Very small top-ups therefore cannot encode as zero (`0.01` becomes `0.1`). Larger
 > amounts drop any leftover fraction of a tenth rather than rounding up.
 >
-> **Recommendation for callers / MPM:** send `kwh` values that are already multiples of
+> **Recommendation for callers:** send `kwh` values that are already multiples of
 > `0.1` so the mapping is exact, and treat billing/ledger amounts as that quantized
 > value (not an unrounded intermediate float). Changing this rule would alter token
 > output for the same inputs and break compatibility with existing meters and systems.

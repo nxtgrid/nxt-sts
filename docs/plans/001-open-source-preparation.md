@@ -1237,6 +1237,10 @@ not in HTTP response). ADR-001 decision 3 wording clarified accordingly.
 2026-07-27 — [docs] — Dropped unmet `docker-compose up` goal; local run is covered by
 `Dockerfile` + README (`docker build` / `docker run`). No compose file is planned.
 
+2026-08-31 — [docs] — Added `docker-compose.yml` as the sidecar include (copy the `nxt-sts`
+service into a parent stack; callers use `http://nxt-sts:8080`). `docker compose up` from this
+repo still works. Local-dev primary path remains `docker run` / `./mvnw spring-boot:run`.
+
 2026-07-27 — [docs] — README Roadmap + Key dependencies note planned BouncyCastle upgrade
 (`bcprov-jdk15on:1.70` → `bcprov-jdk18on`). Struck stale plan-log claim that `hsm` was still
 on disk (packages removed).
