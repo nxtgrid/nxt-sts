@@ -160,7 +160,7 @@ curl -X POST http://localhost:8080/token \
 Interactive API explorer: [http://localhost:8080/swagger](http://localhost:8080/swagger).  
 More detail: [Docker](#docker), [Running](#running), [API Reference](#api-reference).
 
-**Production:** run the same container image on your cloud or host (App Platform, ECS, Cloud Run, a VM, Kubernetes, etc.). Map port **8080**, point the platform health check at **`/actuator/health`**, then call **`POST /token`** from your backend over HTTP. To run STS next to another app on Compose, copy the `nxt-sts` service from [`docker-compose.yml`](docker-compose.yml) — see [Sidecar / Compose](#sidecar--compose).
+**Production:** Git autodeploy, health probe, and same-app wiring: [`docs/deployment/`](docs/deployment/). Compose sidecar: [Sidecar / Compose](#sidecar--compose).
 
 ---
 
@@ -258,14 +258,12 @@ docker run -p 9090:9090 \
 > **Health checks**
 >
 > The image includes a Docker `HEALTHCHECK` that probes `/actuator/health` every 30 seconds
-> on the port given by `SERVER_PORT` (default 8080).
-> When running with plain Docker, you can disable it if your environment performs its own
-> checks: `docker run --no-healthcheck ...`
+> on the port given by `SERVER_PORT` (default 8080). Compose `depends_on: service_healthy`
+> uses that. Disable it for plain Docker if the host probes instead:
+> `docker run --no-healthcheck ...`
 >
-> **Note:** Some cloud platforms (e.g. DigitalOcean App Platform) use their own health-check
-> mechanism instead of the image `HEALTHCHECK`. Configure the platform to probe
-> `/actuator/health` (or use its default TCP check on port 8080) — the Dockerfile health
-> check is not used in those environments.
+> PaaS (DigitalOcean App Platform, etc.) **ignores** the image `HEALTHCHECK`. Set the
+> platform HTTP probe in the [deployment guides](docs/deployment/).
 
 ### Sidecar / Compose
 
