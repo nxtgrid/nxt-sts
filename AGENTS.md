@@ -51,7 +51,7 @@ current task.
 
 | Where | What you will find |
 |---|---|
-| `docs/plans/` | Engineering execution plans — tasks, status, done criteria, notes |
+| `docs/plans/` | Historical execution records (plan 001 complete; deferred work is in the README Roadmap) |
 | `docs/architecture/` | Architecture Decision Records — structural decisions and constraints |
 | `docs/deployment/` | Platform runbooks (App Platform, …) |
 | `docs/capabilities.md` | Supported STS token types and how to add a new one |

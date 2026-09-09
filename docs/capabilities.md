@@ -7,7 +7,7 @@ This document maps **IEC 62055-41 (STS)** token types to what exists in the code
 | **API `type`** | String sent in `POST /token` JSON (`type` field). `—` means no REST type is defined yet. |
 | **STS class / subclass** | Token class and 4-bit subclass encoded in the 20-digit token (software `nativetoken` path). |
 | **Generate** | A `nativetoken` generator exists under `token/generators/tokensgenerator/nativetoken/`. |
-| **Decode** | Standalone decode orchestration (`tokensdecoder/` package). Removed in Task 1.3; a future `POST /decode` would need new wiring. Domain `Token.decode()` helpers remain. |
+| **Decode** | Standalone decode orchestration (`tokensdecoder/` package). Removed; a future `POST /decode` would need new wiring. Domain `Token.decode()` helpers remain. |
 | **REST API** | Exposed via `POST /token` in the running service. |
 
 All generators on the live path use the **Standard Transfer Algorithm (STA / EA07)** with a caller-supplied decoder key.
@@ -65,10 +65,10 @@ The repository also contains code that is **not** part of the software STA path 
 
 | Path | Status |
 |---|---|
-| `token/generators/tokensgenerator/prism/` | Removed (Task 1.2). |
-| `hsm/prism/` | Removed (Task 1.2). |
-| `co.nxtgrid.tokens.*` | Removed (Task 1.1). |
-| `token/generators/tokensdecoder/` | Removed (Task 1.3). |
+| `token/generators/tokensgenerator/prism/` | Removed |
+| `hsm/prism/` | Removed |
+| `co.nxtgrid.tokens.*` | Removed |
+| `token/generators/tokensdecoder/` | Removed |
 
 ---
 

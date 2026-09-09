@@ -1,7 +1,7 @@
 # ADR-001: NXT STS Open-Source Preparation
 
 **Date:** 2026-07-02
-**Status:** Accepted — execution tracked in `docs/plans/001-open-source-preparation.md`
+**Status:** Accepted — decisions 1–8 are in the running service. Deferred extraction and ports are listed in the README Roadmap.
 
 ---
 
@@ -156,18 +156,16 @@ in decisions 1–8 must respect the following boundary:**
 - **Domain objects (`token/domain/*`) remain plain Java value objects.** No JPA, no Jackson
   annotations, no framework dependencies of any kind.
 
-This constraint is **active immediately** — it is not deferred with Phase 4. Violating it
-would require a code redesign before the library can be extracted. Phases 1–3 of the execution
-plan are complete and respect this boundary.
+This constraint is **active immediately**. Violating it would require a code redesign before
+the library can be extracted. The running service already respects this boundary.
 
 The extraction itself (multi-module Maven split, Maven Central publication, conformance test
-vectors) remains deferred to Phase 4 in the execution plan until a concrete in-process consumer
-exists. The README Architecture / Roadmap sections summarize the same boundary for external
-readers.
+vectors) remains deferred until a concrete in-process consumer exists. The README Architecture
+and Roadmap sections summarize the same boundary for external readers.
 
 Multi-language ports (TypeScript/npm, PHP/Composer, Python/PyPI) are feasible because the STA
 algorithm is deterministic and can be validated against shared test vectors; they are deferred
-to Phase 5 and depend on Phase 4.3 (conformance test vectors).
+until conformance test vectors exist.
 
 ### 8. API discoverability: OpenAPI, root route, and field documentation
 
@@ -209,8 +207,7 @@ description beyond a single table row.
 - Known-good STS test vectors established in this effort are the foundation for any future
   language port.
 - The `sts-core` boundary is enforced from the start: `co.nxtgrid.token.*` carries no Spring
-  imports after this effort, meaning Phase 4 (library extraction) is a Maven packaging task,
-  not a code redesign.
+  imports, so library extraction is a Maven packaging task, not a code redesign.
 - OpenAPI docs and a JSON root route make the service self-describing for operators and
   integrators without prior STS domain knowledge.
 
@@ -238,6 +235,6 @@ description beyond a single table row.
 
 - **NOTICE** — NectarAPI upstream attribution; governs what can be deleted vs. what is
   derived.
-- **CONTRIBUTING.md** — must be updated after the `TokenStrategy` pattern is in place to
-  describe the "how to add a token type" workflow.
-- **Execution plan** — `docs/plans/001-open-source-preparation.md`
+- **CONTRIBUTING.md** — describes the "how to add a token type" workflow.
+- **README.md** — Architecture and Roadmap (deferred extraction, vectors, ports).
+- **Historical execution record** — `docs/plans/001-open-source-preparation.md`

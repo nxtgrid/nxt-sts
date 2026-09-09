@@ -74,8 +74,7 @@ engine can be extracted later without a redesign:
   generators), not on `TokenStrategy` or the REST DTOs.
 
 See [ADR-001 decision 7](docs/architecture/001-open-source-preparation.md) for the full
-constraint. Publishing a standalone `sts-core` artifact is deferred until there is a concrete
-in-process consumer — see [Roadmap](#roadmap).
+constraint. Publishing a standalone `sts-core` artifact is deferred — see [Roadmap](#roadmap).
 
 **Key dependencies**
 
@@ -90,8 +89,7 @@ in-process consumer — see [Roadmap](#roadmap).
 
 ## Roadmap
 
-Phases 1–3 of open-source preparation are complete (dead-code removal, HTTP hardening, Docker /
-CI / docs). The following are **intentionally deferred** until someone needs them:
+The following are deferred until there is a concrete need:
 
 | Next step | What it unlocks | When to start |
 |---|---|---|
@@ -102,8 +100,7 @@ CI / docs). The following are **intentionally deferred** until someone needs the
 | **Upgrade BouncyCastle** | Move from `bcprov-jdk15on:1.70` to `bcprov-jdk18on` (supported artifact line) | Maintenance / security hygiene; re-run `./mvnw verify` and confirm token vectors unchanged |
 
 Until `sts-core` is published, use this service over HTTP, or call the `co.nxtgrid.token.*`
-generators in-process from a checkout of this repository. Details: engineering plan
-[Phase 4 / 5](docs/plans/001-open-source-preparation.md).
+generators in-process from a checkout of this repository.
 
 ---
 

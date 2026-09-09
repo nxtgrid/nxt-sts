@@ -3,7 +3,9 @@
 **Decision:** ADR-001 (`docs/architecture/001-open-source-preparation.md`)
 **Plan number:** 001
 **Created:** 2026-07-02
-**Status:** Phases 1–3 complete (Tasks 1.1–1.7, 2.1–2.8, 3.1–3.5). Phase 4 / 5 deferred until a concrete consumer exists.
+**Status:** Historical. Phases 1–3 are complete (Tasks 1.1–1.7, 2.1–2.8, 3.1–3.5). Do not
+execute remaining checklists. Deferred extraction, conformance vectors, and language ports
+are listed in the README Roadmap.
 
 ---
 
